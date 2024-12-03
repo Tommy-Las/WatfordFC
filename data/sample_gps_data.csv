@@ -1,0 +1,7 @@
+date,player_id,player_name,microcycle,max_speed,avg_speed,distance,max_acceleration,max_deceleration,total_sprints,minutes,team
+2023-07-01,1,John Doe,MD,32.5,12.3,10500,4.2,-4.1,25,90,Team A
+2023-07-01,2,Jane Smith,MD,30.8,11.8,9800,3.9,-3.8,22,90,Team A
+2023-06-30,1,John Doe,MD-1,28.2,10.1,7200,3.5,-3.4,15,60,Team A
+2023-06-30,2,Jane Smith,MD-1,27.5,9.8,6800,3.3,-3.2,14,60,Team A
+2023-06-29,1,John Doe,MD-2,25.4,8.9,5500,3.0,-2.9,10,45,Team A
+2023-06-29,2,Jane Smith,MD-2,24.8,8.7,5200,2.8,-2.7,9,45,Team A
