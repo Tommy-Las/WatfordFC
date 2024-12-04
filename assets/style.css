@@ -60,3 +60,16 @@
     background-color: #262730;
     border: 1px solid white;
 }
+
+/* Metric Styles */
+[data-testid="stMetricValue"] {
+    font-size: 1.8rem !important;
+}
+
+/* Make Player Classification metric smaller */
+[data-testid="stMetricValue"]:has(+ [data-testid="stMetricLabel"]:contains("Player Classification")) {
+    font-size: 1rem !important;
+    line-height: 1.2 !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+}

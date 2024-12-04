@@ -13,15 +13,15 @@ COLORS = {
 
 def format_date_microcycle(date, microcycle):
     """Format date and microcycle in the desired format."""
-    return f"{date.strftime('%B %d')} - {microcycle}"
+    return f"{date.strftime('%Y %B %d')} - {microcycle}"
 
-def plot_speed_timeline(df, player_id, selected_date, selected_microcycle):
+def plot_speed_timeline(df, player_name, selected_date, selected_microcycle):
     """Create speed timeline visualization."""
     selected_date = pd.to_datetime(selected_date)
     start_date = selected_date - timedelta(days=7)
     
     timeline_data = df[
-        (df['player_id'] == player_id) & 
+        (df['player_name'] == player_name) & 
         (df['date'] >= start_date) & 
         (df['date'] <= selected_date)
     ].sort_values('date')
@@ -77,13 +77,13 @@ def plot_speed_timeline(df, player_id, selected_date, selected_microcycle):
     
     return fig
 
-def plot_acceleration_timeline(df, player_id, selected_date, selected_microcycle):
+def plot_acceleration_timeline(df, player_name, selected_date, selected_microcycle):
     """Create acceleration/deceleration timeline visualization."""
     selected_date = pd.to_datetime(selected_date)
     start_date = selected_date - timedelta(days=7)
     
     timeline_data = df[
-        (df['player_id'] == player_id) & 
+        (df['player_name'] == player_name) & 
         (df['date'] >= start_date) & 
         (df['date'] <= selected_date)
     ].sort_values('date')
@@ -144,13 +144,13 @@ def plot_acceleration_timeline(df, player_id, selected_date, selected_microcycle
     
     return fig
 
-def plot_distance_timeline(df, player_id, selected_date, selected_microcycle):
+def plot_distance_timeline(df, player_name, selected_date, selected_microcycle):
     """Create distance timeline visualization."""
     selected_date = pd.to_datetime(selected_date)
     start_date = selected_date - timedelta(days=7)
     
     timeline_data = df[
-        (df['player_id'] == player_id) & 
+        (df['player_name'] == player_name) & 
         (df['date'] >= start_date) & 
         (df['date'] <= selected_date)
     ].sort_values('date')
@@ -206,13 +206,13 @@ def plot_distance_timeline(df, player_id, selected_date, selected_microcycle):
     
     return fig
 
-def plot_performance_timeline(df, player_id, selected_date, selected_microcycle):
+def plot_performance_timeline(df, player_name, selected_date, selected_microcycle):
     """Create performance (sprints) timeline visualization."""
     selected_date = pd.to_datetime(selected_date)
     start_date = selected_date - timedelta(days=7)
     
     timeline_data = df[
-        (df['player_id'] == player_id) & 
+        (df['player_name'] == player_name) & 
         (df['date'] >= start_date) & 
         (df['date'] <= selected_date)
     ].sort_values('date')
@@ -268,21 +268,17 @@ def plot_performance_timeline(df, player_id, selected_date, selected_microcycle)
     
     return fig
 
-def classify_player(df, player_id):
+def classify_player(df, player_name):
     """Classify player based on their performance metrics."""
-    numeric_cols = ['max_speed', 'avg_speed', 'distance', 'max_acceleration', 
-                   'max_deceleration', 'total_sprints', 'minutes']
+    player_data = df[df['player_name'] == player_name]
     
-    player_stats = df[df['player_id'] == player_id][numeric_cols].mean()
-    team_stats = df[numeric_cols].mean()
-    team_std = df[numeric_cols].std()
-    
-    speed_zscore = (player_stats['max_speed'] - team_stats['max_speed']) / team_std['max_speed']
-    distance_zscore = (player_stats['distance'] - team_stats['distance']) / team_std['distance']
+    # Calculate z-scores for key metrics
+    speed_zscore = (player_data['max_speed'].mean() - df['max_speed'].mean()) / df['max_speed'].std()
+    distance_zscore = (player_data['distance'].mean() - df['distance'].mean()) / df['distance'].std()
     
     if speed_zscore > 1:
-        return "High Intensity Player"
+        return "High Intensity"
     elif distance_zscore > 1:
-        return "High Distance Player"
+        return "High Distance"
     else:
-        return "Balanced Performance Player"
+        return "Balanced Performance"
