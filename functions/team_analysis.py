@@ -89,18 +89,18 @@ def plot_team_metrics(team_metrics, selected_date=None):
         mode='lines+markers'
     ))
     
-    # Add all-time max reference line
-    all_time_max_distance = timeline_data['TD'].max()
-    fig_team_distance.add_hline(
-        y=all_time_max_distance,
-        line_dash="dash",
-        line_color=COLORS['max_line'],
-        annotation_text=f"All-time Max: {all_time_max_distance:.0f} m",
-        annotation_position="top right"
-    )
+    # # Add all-time max reference line
+    # all_time_max_distance = timeline_data['TD'].max()
+    # fig_team_distance.add_hline(
+    #     y=all_time_max_distance,
+    #     line_dash="dash",
+    #     line_color=COLORS['max_line'],
+    #     annotation_text=f"All-time Max: {all_time_max_distance:.0f} m",
+    #     annotation_position="top right"
+    # )
     
     fig_team_distance.update_layout(
-        title='Team Average Distance (Last 7 Days)',
+        title='Team Average Distance',
         xaxis_title='Session',
         yaxis_title='Average Distance (m)',
         hovermode='x unified',
@@ -135,13 +135,13 @@ def plot_team_metrics(team_metrics, selected_date=None):
     fig_team_sprints.add_trace(go.Scatter(
         x=timeline_data['date_label'],
         y=timeline_data['+25 Km/h'],
-        name='Very High Speed Running (+25 km/h)',
+        name='+25 km/h',
         line=dict(color='#4B0082'),  # Deep purple color
         mode='lines+markers'
     ))
     
     fig_team_sprints.update_layout(
-        title='Team High Intensity Actions (Last 7 Days)',
+        title='Team High Intensity Actions',
         xaxis_title='Session',
         yaxis_title='Count',
         hovermode='x unified',
