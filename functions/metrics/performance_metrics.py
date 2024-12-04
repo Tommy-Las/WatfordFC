@@ -15,12 +15,16 @@ def get_performance_summary(session_data):
     if session_data.empty:
         return {
             'Sprints': 0,
+            'HSR': 0,
+            '+25 Km/h': 0,
             'Mins': 0,
             'injury_prevention_index': 0
         }
     
     return {
         'Sprints': int(session_data['Sprints'].sum()),
+        'HSR': int(session_data['HSR'].sum()),
+        '+25 Km/h': int(session_data['+25 Km/h'].sum()),
         'Mins': int(session_data['Mins'].max()),
         'injury_prevention_index': calculate_injury_prevention_index(session_data)
     }

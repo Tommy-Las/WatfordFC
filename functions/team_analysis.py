@@ -34,7 +34,9 @@ def calculate_team_metrics(df, selected_date=None, selected_microcycle=None):
                 'Sprints': 'sum',
                 'Mins': 'sum',
                 'ACC': 'max',
-                'DEC': 'min'
+                'DEC': 'min',
+                'HSR': 'mean',
+                '+25 Km/h': 'mean'
             }).reset_index()
     
     # Calculate metrics for all sessions
@@ -45,7 +47,9 @@ def calculate_team_metrics(df, selected_date=None, selected_microcycle=None):
         'Sprints': 'sum',
         'Mins': 'sum',
         'ACC': 'max',
-        'DEC': 'min'
+        'DEC': 'min',
+        'HSR': 'mean',
+        '+25 Km/h': 'mean'
     }).reset_index()
 
 def plot_team_metrics(team_metrics, selected_date=None):
@@ -112,20 +116,28 @@ def plot_team_metrics(team_metrics, selected_date=None):
         mode='lines+markers'
     ))
     
-    # Add all-time max reference line
-    all_time_max_sprints = timeline_data['Sprints'].max()
-    fig_team_sprints.add_hline(
-        y=all_time_max_sprints,
-        line_dash="dash",
-        line_color=COLORS['max_line'],
-        annotation_text=f"All-time Max: {all_time_max_sprints:.0f} sprints",
-        annotation_position="top right"
-    )
+    # Add HSR line
+    fig_team_sprints.add_trace(go.Scatter(
+        x=timeline_data['date_label'],
+        y=timeline_data['HSR'],
+        name='High Speed Running (+19 km/h)',
+        line=dict(color=COLORS['secondary']),
+        mode='lines+markers'
+    ))
+    
+    # Add +25 km/h line
+    fig_team_sprints.add_trace(go.Scatter(
+        x=timeline_data['date_label'],
+        y=timeline_data['+25 Km/h'],
+        name='Very High Speed Running (+25 km/h)',
+        line=dict(color='#4B0082'),  # Deep purple color
+        mode='lines+markers'
+    ))
     
     fig_team_sprints.update_layout(
-        title='Total Team Sprints (Last 7 Days)',
+        title='Team High Intensity Actions (Last 7 Days)',
         xaxis_title='Session',
-        yaxis_title='Total Sprints',
+        yaxis_title='Count',
         hovermode='x unified',
         xaxis=dict(tickangle=45),
         plot_bgcolor=COLORS['background'],

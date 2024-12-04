@@ -77,20 +77,29 @@ def render_distance_tab(df, player_name, session_data, selected_date, selected_m
 def render_performance_tab(df, player_name, session_data, selected_date, selected_microcycle):
     """Render performance metrics tab content."""
     perf_metrics = get_performance_summary(session_data)
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3 = st.columns(3)
     with col1:
         st.metric("Total Sprints", perf_metrics['Sprints'])
     with col2:
-        st.metric("Minutes", perf_metrics['Mins'])
+        st.metric("High Speed Running (+19 km/h)", perf_metrics['HSR'])
     with col3:
-        st.metric("Player Classification", classify_player(df, player_name))
-    with col4:
-        st.metric("Injury Prevention Index", perf_metrics['injury_prevention_index'])
+        st.metric("+25 km/h", perf_metrics['+25 Km/h'])
     
     st.plotly_chart(
         plot_performance_timeline(df, player_name, selected_date, selected_microcycle),
         use_container_width=True
     )
+
+def render_other_tab(df, player_name, session_data):
+    """Render other metrics tab content."""
+    perf_metrics = get_performance_summary(session_data)
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Minutes", perf_metrics['Mins'])
+    with col2:
+        st.metric("Player Classification", classify_player(df, player_name))
+    with col3:
+        st.metric("Injury Prevention Index", perf_metrics['injury_prevention_index'])
 
 def get_player_session_options(df, player_name):
     """Get session options for a specific player sorted by date in descending order."""
@@ -122,7 +131,7 @@ def main():
         choice = show_menu()
         
         if choice == "Player Analysis":
-            st.title("Player Physical Performance Dashboard")
+            st.title("Player Physical Profile Analysis")
             
             # Player selection
             player_name = st.selectbox("Select Player", sorted(df['PlayerID'].unique()))
@@ -154,11 +163,12 @@ def main():
                 if not session_data.empty:
                     # Create tabs with custom CSS class
                     st.markdown('<div class="stTab">', unsafe_allow_html=True)
-                    speed_tab, accel_tab, distance_tab, perf_tab = st.tabs([
+                    speed_tab, accel_tab, distance_tab, perf_tab, other_tab = st.tabs([
                         "Speed Metrics",
                         "Acceleration & Deceleration",
                         "Distance Metrics",
-                        "Performance Metrics"
+                        "Performance Metrics",
+                        "Other"
                     ])
                     st.markdown('</div>', unsafe_allow_html=True)
                     
@@ -174,6 +184,9 @@ def main():
                     
                     with perf_tab:
                         render_performance_tab(df, player_name, session_data, selected_date, selected_microcycle)
+                    
+                    with other_tab:
+                        render_other_tab(df, player_name, session_data)
                 else:
                     st.warning("No data available for the selected player and session.")
             else:
@@ -197,12 +210,13 @@ def main():
             ]['Microcycle'].iloc[0]
             
             # Calculate team metrics
+            # Calculate team metrics
             team_metrics = calculate_team_metrics(df, selected_date, selected_microcycle)
             
             if not team_metrics.empty:
                 # Display team metrics
                 st.header("Team Overview")
-                col1, col2, col3, col4 = st.columns(4)
+                col1, col2, col3, col4, col5, col6 = st.columns(6)
                 with col1:
                     st.metric("Average Distance (m)", f"{team_metrics['TD'].mean():.0f}")
                 with col2:
@@ -210,6 +224,10 @@ def main():
                 with col3:
                     st.metric("Total Team Sprints", f"{team_metrics['Sprints'].sum():.0f}")
                 with col4:
+                    st.metric("Average HSR (+19 km/h)", f"{team_metrics['HSR'].mean():.1f}")
+                with col5:
+                    st.metric("Average +25 km/h", f"{team_metrics['+25 Km/h'].mean():.1f}")
+                with col6:
                     st.metric("Total Team Minutes", f"{team_metrics['Mins'].sum():.0f}")
                 
                 # Team visualizations
