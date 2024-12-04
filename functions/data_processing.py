@@ -22,7 +22,7 @@ def load_and_prepare_data(data_path):
         column_mapping = {
             'PlayerID': 'player_name',  # PlayerID will be used as player_name
             'DATE': 'date',
-            'Microcycle': 'microcycle', 
+            'Microcycle': 'microcycle',
             'TD': 'distance',
             'TD_Rel': 'relative_distance',
             'ACC': 'max_acceleration',

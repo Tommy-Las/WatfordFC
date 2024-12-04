@@ -1,74 +1,102 @@
+/* Variables */
+:root {
+    --primary-color: #FFD700;
+    --primary-hover: #ffdc1f;
+    --background-dark: #1E1E1E;
+    --text-light: white;
+    --text-dark: black;
+}
+
 /* Tab Styles */
 .stTab {
     font-size: 1.2rem !important;
     font-weight: 600 !important;
 }
 
-/* Make selected tab more prominent */
-.stTab [data-baseweb="tab-list"] button[aria-selected="true"] {
-    background-color: #FFD700 !important;
-    color: black !important;
-    border-radius: 5px 5px 0 0 !important;
-    padding: 10px 20px !important;
-}
-
-/* Style unselected tabs */
 .stTab [data-baseweb="tab-list"] button {
     padding: 10px 20px !important;
     font-size: 1.1rem !important;
     transition: all 0.3s ease !important;
 }
 
-/* Sidebar Styles */
+.stTab [data-baseweb="tab-list"] button[aria-selected="true"] {
+    background-color: var(--primary-color) !important;
+    color: var(--text-dark) !important;
+    border-radius: 5px 5px 0 0 !important;
+}
+
+/* Sidebar Layout */
 [data-testid="stSidebar"] {
-    background-color: #1E1E1E;
+    background-color: var(--background-dark);
 }
 
-[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p,
 [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h1,
-[data-testid="stSidebar"] .stRadio label,
 [data-testid="stSidebar"] .stTitle {
-    color: white !important;
+    color: var(--text-light) !important;
 }
 
-[data-testid="stSidebar"] button {
-    background-color: #FFD700;
-    color: black;
+/* Navigation Container */
+[data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
+    gap: 0.5rem !important;
 }
 
-[data-testid="stSidebar"] button:hover {
-    background-color: #ffdc1f;
-    color: white;
+/* Navigation Buttons */
+[data-testid="stSidebar"] [data-testid="baseButton-primary"],
+[data-testid="stSidebar"] [data-testid="baseButton-secondary"] {
+    height: 3rem !important;
+    margin: 0.25rem 0 !important;
+    padding: 0.75rem 1rem !important;
+    border-radius: 5px !important;
+    transition: all 0.3s ease !important;
+    font-weight: 600 !important;
+    font-size: 1rem !important;
+    color: var(--text-dark) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    width: 100% !important;
 }
 
-/* Additional Sidebar Styles */
-.sidebar .sidebar-content {
-    background-color: #262730;
-    color: white;
+/* Primary Navigation Button */
+[data-testid="stSidebar"] [data-testid="baseButton-primary"] {
+    background-color: var(--primary-color) !important;
+    border: none !important;
 }
 
-.sidebar .widget-label {
-    color: white !important;
+[data-testid="stSidebar"] [data-testid="baseButton-primary"]:hover {
+    background-color: var(--primary-hover) !important;
 }
 
-.sidebar .stRadio > label {
-    color: white !important;
+/* Secondary Navigation Button */
+[data-testid="stSidebar"] [data-testid="baseButton-secondary"] {
+    background-color: transparent !important;
+    border: 1px solid var(--primary-color) !important;
+    color: var(--text-light) !important;
 }
 
-.sidebar .stButton > button {
-    color: white;
-    background-color: #262730;
-    border: 1px solid white;
+[data-testid="stSidebar"] [data-testid="baseButton-secondary"]:hover {
+    background-color: rgba(255, 215, 0, 0.1) !important;
 }
 
-/* Metric Styles */
+/* Navigation Spacer */
+.nav-spacer {
+    height: calc(100vh - 400px) !important;
+    min-height: 2rem !important;
+}
+
+
+[data-testid="stSidebar"] div:last-child .stButton > button:hover {
+    background-color: var(--primary-hover) !important;
+}
+
+/* Metrics */
 [data-testid="stMetricValue"] {
     font-size: 1.8rem !important;
 }
 
-/* Make Player Classification metric smaller */
 [data-testid="stMetricValue"]:has(+ [data-testid="stMetricLabel"]:contains("Player Classification")) {
-    font-size: 1rem !important;
+    font-size: 1.2rem !important;
     line-height: 1.2 !important;
     white-space: normal !important;
     word-wrap: break-word !important;
