@@ -1,0 +1,62 @@
+/* Tab Styles */
+.stTab {
+    font-size: 1.2rem !important;
+    font-weight: 600 !important;
+}
+
+/* Make selected tab more prominent */
+.stTab [data-baseweb="tab-list"] button[aria-selected="true"] {
+    background-color: #FFD700 !important;
+    color: black !important;
+    border-radius: 5px 5px 0 0 !important;
+    padding: 10px 20px !important;
+}
+
+/* Style unselected tabs */
+.stTab [data-baseweb="tab-list"] button {
+    padding: 10px 20px !important;
+    font-size: 1.1rem !important;
+    transition: all 0.3s ease !important;
+}
+
+/* Sidebar Styles */
+[data-testid="stSidebar"] {
+    background-color: #1E1E1E;
+}
+
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p,
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] h1,
+[data-testid="stSidebar"] .stRadio label,
+[data-testid="stSidebar"] .stTitle {
+    color: white !important;
+}
+
+[data-testid="stSidebar"] button {
+    background-color: #FFD700;
+    color: black;
+}
+
+[data-testid="stSidebar"] button:hover {
+    background-color: #ffdc1f;
+    color: white;
+}
+
+/* Additional Sidebar Styles */
+.sidebar .sidebar-content {
+    background-color: #262730;
+    color: white;
+}
+
+.sidebar .widget-label {
+    color: white !important;
+}
+
+.sidebar .stRadio > label {
+    color: white !important;
+}
+
+.sidebar .stButton > button {
+    color: white;
+    background-color: #262730;
+    border: 1px solid white;
+}

@@ -1,7 +1,5 @@
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
-import numpy as np
 from datetime import timedelta
 
 # Define color scheme
@@ -10,39 +8,34 @@ COLORS = {
     'secondary': '#FF4B4B',  # Red
     'background': 'white',   # White background
     'text': 'black',         # Black text
-    'max_line': 'black'      # Black line for max speed
+    'max_line': 'black'      # Black line for max values
 }
 
 def format_date_microcycle(date, microcycle):
     """Format date and microcycle in the desired format."""
     return f"{date.strftime('%B %d')} - {microcycle}"
 
-def get_player_max_speed(df, player_id):
-    """Get the all-time maximum speed for a player."""
-    return df[df['player_id'] == player_id]['max_speed'].max()
-
-def plot_speed_acceleration_profile(df, player_id, selected_date, selected_microcycle):
-    """Create speed and acceleration visualizations for player with 7-day timeline."""
+def plot_speed_timeline(df, player_id, selected_date, selected_microcycle):
+    """Create speed timeline visualization."""
     selected_date = pd.to_datetime(selected_date)
     start_date = selected_date - timedelta(days=7)
-    end_date = selected_date
     
     timeline_data = df[
         (df['player_id'] == player_id) & 
         (df['date'] >= start_date) & 
-        (df['date'] <= end_date)
+        (df['date'] <= selected_date)
     ].sort_values('date')
     
     timeline_data['date_label'] = timeline_data.apply(
         lambda x: format_date_microcycle(x['date'], x['microcycle']), axis=1
     )
     
-    all_time_max = get_player_max_speed(df, player_id)
+    all_time_max = timeline_data['max_speed'].max()
     
-    # Speed profile
-    fig_speed = go.Figure()
+    fig = go.Figure()
     
-    fig_speed.add_trace(go.Scatter(
+    # Add max speed line
+    fig.add_trace(go.Scatter(
         x=timeline_data['date_label'],
         y=timeline_data['max_speed'],
         name='Max Speed',
@@ -50,15 +43,8 @@ def plot_speed_acceleration_profile(df, player_id, selected_date, selected_micro
         mode='lines+markers'
     ))
     
-    fig_speed.add_trace(go.Scatter(
-        x=timeline_data['date_label'],
-        y=timeline_data['avg_speed'],
-        name='Avg Speed',
-        line=dict(color=COLORS['secondary'], dash='dot'),
-        mode='lines+markers'
-    ))
-    
-    fig_speed.add_hline(
+    # Add all-time max reference line
+    fig.add_hline(
         y=all_time_max,
         line_dash="dash",
         line_color=COLORS['max_line'],
@@ -66,20 +52,20 @@ def plot_speed_acceleration_profile(df, player_id, selected_date, selected_micro
         annotation_position="top right"
     )
     
+    # Highlight selected session
     selected_session = timeline_data[timeline_data['microcycle'] == selected_microcycle]
     if not selected_session.empty:
-        fig_speed.add_trace(go.Scatter(
+        fig.add_trace(go.Scatter(
             x=selected_session['date_label'],
             y=selected_session['max_speed'],
             name='Selected Session',
             mode='markers',
-            marker=dict(color=COLORS['secondary'], size=12, symbol='star'),
-            showlegend=True
+            marker=dict(color=COLORS['secondary'], size=12, symbol='star')
         ))
     
-    fig_speed.update_layout(
-        title='Speed Profile (Last 7 Days)',
-        xaxis_title='Date',
+    fig.update_layout(
+        title='Speed Timeline (Last 7 Days)',
+        xaxis_title='Session',
         yaxis_title='Speed (km/h)',
         showlegend=True,
         hovermode='x unified',
@@ -89,10 +75,27 @@ def plot_speed_acceleration_profile(df, player_id, selected_date, selected_micro
         font=dict(color=COLORS['text'])
     )
     
-    # Acceleration profile
-    fig_accel = go.Figure()
+    return fig
+
+def plot_acceleration_timeline(df, player_id, selected_date, selected_microcycle):
+    """Create acceleration/deceleration timeline visualization."""
+    selected_date = pd.to_datetime(selected_date)
+    start_date = selected_date - timedelta(days=7)
     
-    fig_accel.add_trace(go.Scatter(
+    timeline_data = df[
+        (df['player_id'] == player_id) & 
+        (df['date'] >= start_date) & 
+        (df['date'] <= selected_date)
+    ].sort_values('date')
+    
+    timeline_data['date_label'] = timeline_data.apply(
+        lambda x: format_date_microcycle(x['date'], x['microcycle']), axis=1
+    )
+    
+    fig = go.Figure()
+    
+    # Add acceleration line
+    fig.add_trace(go.Scatter(
         x=timeline_data['date_label'],
         y=timeline_data['max_acceleration'],
         name='Max Acceleration',
@@ -100,7 +103,8 @@ def plot_speed_acceleration_profile(df, player_id, selected_date, selected_micro
         mode='lines+markers'
     ))
     
-    fig_accel.add_trace(go.Scatter(
+    # Add deceleration line
+    fig.add_trace(go.Scatter(
         x=timeline_data['date_label'],
         y=timeline_data['max_deceleration'],
         name='Max Deceleration',
@@ -108,27 +112,27 @@ def plot_speed_acceleration_profile(df, player_id, selected_date, selected_micro
         mode='lines+markers'
     ))
     
+    # Highlight selected session
+    selected_session = timeline_data[timeline_data['microcycle'] == selected_microcycle]
     if not selected_session.empty:
-        fig_accel.add_trace(go.Scatter(
+        fig.add_trace(go.Scatter(
             x=selected_session['date_label'],
             y=selected_session['max_acceleration'],
             name='Selected Session (Accel)',
             mode='markers',
-            marker=dict(color=COLORS['primary'], size=12, symbol='star'),
-            showlegend=True
+            marker=dict(color=COLORS['primary'], size=12, symbol='star')
         ))
-        fig_accel.add_trace(go.Scatter(
+        fig.add_trace(go.Scatter(
             x=selected_session['date_label'],
             y=selected_session['max_deceleration'],
             name='Selected Session (Decel)',
             mode='markers',
-            marker=dict(color=COLORS['secondary'], size=12, symbol='star'),
-            showlegend=True
+            marker=dict(color=COLORS['secondary'], size=12, symbol='star')
         ))
     
-    fig_accel.update_layout(
-        title='Acceleration Profile (Last 7 Days)',
-        xaxis_title='Date',
+    fig.update_layout(
+        title='Acceleration Timeline (Last 7 Days)',
+        xaxis_title='Session',
         yaxis_title='Acceleration (m/s²)',
         showlegend=True,
         hovermode='x unified',
@@ -138,7 +142,131 @@ def plot_speed_acceleration_profile(df, player_id, selected_date, selected_micro
         font=dict(color=COLORS['text'])
     )
     
-    return fig_speed, fig_accel
+    return fig
+
+def plot_distance_timeline(df, player_id, selected_date, selected_microcycle):
+    """Create distance timeline visualization."""
+    selected_date = pd.to_datetime(selected_date)
+    start_date = selected_date - timedelta(days=7)
+    
+    timeline_data = df[
+        (df['player_id'] == player_id) & 
+        (df['date'] >= start_date) & 
+        (df['date'] <= selected_date)
+    ].sort_values('date')
+    
+    timeline_data['date_label'] = timeline_data.apply(
+        lambda x: format_date_microcycle(x['date'], x['microcycle']), axis=1
+    )
+    
+    all_time_max = timeline_data['distance'].max()
+    
+    fig = go.Figure()
+    
+    # Add distance line
+    fig.add_trace(go.Scatter(
+        x=timeline_data['date_label'],
+        y=timeline_data['distance'],
+        name='Total Distance',
+        line=dict(color=COLORS['primary']),
+        mode='lines+markers'
+    ))
+    
+    # Add all-time max reference line
+    fig.add_hline(
+        y=all_time_max,
+        line_dash="dash",
+        line_color=COLORS['max_line'],
+        annotation_text=f"All-time Max: {all_time_max:.0f} m",
+        annotation_position="top right"
+    )
+    
+    # Highlight selected session
+    selected_session = timeline_data[timeline_data['microcycle'] == selected_microcycle]
+    if not selected_session.empty:
+        fig.add_trace(go.Scatter(
+            x=selected_session['date_label'],
+            y=selected_session['distance'],
+            name='Selected Session',
+            mode='markers',
+            marker=dict(color=COLORS['secondary'], size=12, symbol='star')
+        ))
+    
+    fig.update_layout(
+        title='Distance Timeline (Last 7 Days)',
+        xaxis_title='Session',
+        yaxis_title='Distance (m)',
+        showlegend=True,
+        hovermode='x unified',
+        xaxis=dict(tickangle=45),
+        plot_bgcolor=COLORS['background'],
+        paper_bgcolor=COLORS['background'],
+        font=dict(color=COLORS['text'])
+    )
+    
+    return fig
+
+def plot_performance_timeline(df, player_id, selected_date, selected_microcycle):
+    """Create performance (sprints) timeline visualization."""
+    selected_date = pd.to_datetime(selected_date)
+    start_date = selected_date - timedelta(days=7)
+    
+    timeline_data = df[
+        (df['player_id'] == player_id) & 
+        (df['date'] >= start_date) & 
+        (df['date'] <= selected_date)
+    ].sort_values('date')
+    
+    timeline_data['date_label'] = timeline_data.apply(
+        lambda x: format_date_microcycle(x['date'], x['microcycle']), axis=1
+    )
+    
+    all_time_max = timeline_data['total_sprints'].max()
+    
+    fig = go.Figure()
+    
+    # Add sprints line
+    fig.add_trace(go.Scatter(
+        x=timeline_data['date_label'],
+        y=timeline_data['total_sprints'],
+        name='Total Sprints',
+        line=dict(color=COLORS['primary']),
+        mode='lines+markers'
+    ))
+    
+    # Add all-time max reference line
+    fig.add_hline(
+        y=all_time_max,
+        line_dash="dash",
+        line_color=COLORS['max_line'],
+        annotation_text=f"All-time Max: {all_time_max} sprints",
+        annotation_position="top right"
+    )
+    
+    # Highlight selected session
+    selected_session = timeline_data[timeline_data['microcycle'] == selected_microcycle]
+    if not selected_session.empty:
+        fig.add_trace(go.Scatter(
+            x=selected_session['date_label'],
+            y=selected_session['total_sprints'],
+            name='Selected Session',
+            mode='markers',
+            marker=dict(color=COLORS['secondary'], size=12, symbol='star')
+        ))
+    
+    fig.update_layout(
+        title='Sprints Timeline (Last 7 Days)',
+        xaxis_title='Session',
+        yaxis_title='Number of Sprints',
+        showlegend=True,
+        hovermode='x unified',
+        xaxis=dict(tickangle=45),
+        plot_bgcolor=COLORS['background'],
+        paper_bgcolor=COLORS['background'],
+        font=dict(color=COLORS['text'])
+    )
+    
+    return fig
 
 def classify_player(df, player_id):
     """Classify player based on their performance metrics."""
@@ -158,24 +286,3 @@ def classify_player(df, player_id):
         return "High Distance Player"
     else:
         return "Balanced Performance Player"
-
-def get_session_summary(df, player_id, date, microcycle):
-    """Get summary metrics for a specific session."""
-    session_data = df[
-        (df['date'].dt.date == date) & 
-        (df['microcycle'] == microcycle) &
-        (df['player_id'] == player_id)
-    ]
-    
-    if session_data.empty:
-        return None
-    
-    return {
-        'max_speed': session_data['max_speed'].max(),
-        'avg_speed': session_data['avg_speed'].mean(),
-        'total_distance': session_data['distance'].sum(),
-        'max_acceleration': session_data['max_acceleration'].max(),
-        'max_deceleration': session_data['max_deceleration'].min(),
-        'total_sprints': session_data['total_sprints'].sum(),
-        'minutes': session_data['minutes'].max()
-    }
