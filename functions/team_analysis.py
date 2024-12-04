@@ -1,6 +1,7 @@
 import pandas as pd
 import plotly.graph_objects as go
 from datetime import timedelta
+from functions.data_processing import format_date_microcycle
 
 # Define color scheme
 COLORS = {
@@ -11,21 +12,22 @@ COLORS = {
     'max_line': 'black'      # Black line for max values
 }
 
-def format_date_microcycle(date, microcycle):
-    """Format date and microcycle in the desired format."""
-    return f"{date.strftime('%Y %B %d')} - {microcycle}"
-
+"""
+Calculate aggregated team metrics with optional date/microcycle filter.
+"""
 def calculate_team_metrics(df, selected_date=None, selected_microcycle=None):
-    """Calculate aggregated team metrics with optional date/microcycle filter."""
+    
     metrics_df = df.copy()
     
     if selected_date and selected_microcycle:
+        
         # Filter for selected session metrics
         session_metrics = metrics_df[
             (metrics_df['DATE'].dt.date == selected_date) & 
             (metrics_df['Microcycle'] == selected_microcycle)
         ]
         
+        # Return team session metrics grouped by date and microcycle
         if not session_metrics.empty:
             return session_metrics.groupby(['DATE', 'Microcycle']).agg({
                 'TD': 'mean',
@@ -52,8 +54,12 @@ def calculate_team_metrics(df, selected_date=None, selected_microcycle=None):
         '+25 Km/h': 'mean'
     }).reset_index()
 
+
+"""
+Create visualizations for team metrics showing timeline for last 7 days.
+"""
 def plot_team_metrics(team_metrics, selected_date=None):
-    """Create visualizations for team metrics showing timeline for last 7 days."""
+    
     if selected_date is None:
         selected_date = team_metrics['DATE'].max()
     else:

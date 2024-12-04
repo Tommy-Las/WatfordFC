@@ -1,7 +1,9 @@
 import streamlit as st
 
+"""
+    Display the navigation menu with logo and navigation links.
+"""
 def show_menu():
-    """Display the navigation menu with logo and navigation links."""
     # Display logo
     st.sidebar.image("assets/logo.png", width=100)
     st.sidebar.title("Navigation")
@@ -10,7 +12,7 @@ def show_menu():
     if 'page' not in st.session_state:
         st.session_state.page = "Player Analysis"
     
-    # Create navigation buttons vertically
+    # Navigation buttons
     if st.sidebar.button(
         "Player Analysis",
         key="player_btn",

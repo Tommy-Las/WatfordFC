@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 from common.session import check_password
 from common.menu import show_menu
-from functions.data_processing import load_and_prepare_data, get_player_id_by_name
+from functions.data_processing import load_and_prepare_data
 from functions.player_analysis import (
     plot_speed_timeline,
     plot_acceleration_timeline,

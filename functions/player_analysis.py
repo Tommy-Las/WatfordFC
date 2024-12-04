@@ -1,6 +1,7 @@
 import pandas as pd
 import plotly.graph_objects as go
 from datetime import timedelta
+from functions.data_processing import format_date_microcycle
 
 # Define color scheme
 COLORS = {
@@ -11,25 +12,30 @@ COLORS = {
     'max_line': 'black'      # Black line for max values
 }
 
-def format_date_microcycle(date, microcycle):
-    """Format date and microcycle in the desired format."""
-    return f"{date.strftime('%Y %B %d')} - {microcycle}"
-
+"""
+Create speed timeline visualization.
+"""
 def plot_speed_timeline(df, player_name, selected_date, selected_microcycle):
-    """Create speed timeline visualization."""
+    
+    # Make sure its pandas data object
     selected_date = pd.to_datetime(selected_date)
+    
+    # We want the last 7 days data
     start_date = selected_date - timedelta(days=7)
     
+    # Filter df by player and date
     timeline_data = df[
         (df['PlayerID'] == player_name) & 
         (df['DATE'] >= start_date) & 
         (df['DATE'] <= selected_date)
     ].sort_values('DATE')
     
+    # Format the data to show date and microcycle
     timeline_data['date_label'] = timeline_data.apply(
         lambda x: format_date_microcycle(x['DATE'], x['Microcycle']), axis=1
     )
     
+    # Get max speed value
     all_time_max = timeline_data['Max Speed'].max()
     
     fig = go.Figure()
@@ -77,8 +83,11 @@ def plot_speed_timeline(df, player_name, selected_date, selected_microcycle):
     
     return fig
 
+"""
+Create acceleration/deceleration timeline visualization.
+"""
 def plot_acceleration_timeline(df, player_name, selected_date, selected_microcycle):
-    """Create acceleration/deceleration timeline visualization."""
+    
     selected_date = pd.to_datetime(selected_date)
     start_date = selected_date - timedelta(days=7)
     
@@ -144,8 +153,11 @@ def plot_acceleration_timeline(df, player_name, selected_date, selected_microcyc
     
     return fig
 
+"""
+Create distance timeline visualization.
+"""
 def plot_distance_timeline(df, player_name, selected_date, selected_microcycle):
-    """Create distance timeline visualization."""
+
     selected_date = pd.to_datetime(selected_date)
     start_date = selected_date - timedelta(days=7)
     
@@ -206,8 +218,11 @@ def plot_distance_timeline(df, player_name, selected_date, selected_microcycle):
     
     return fig
 
+"""
+Create performance (sprints) timeline visualization.
+"""
 def plot_performance_timeline(df, player_name, selected_date, selected_microcycle):
-    """Create performance (sprints) timeline visualization."""
+    
     selected_date = pd.to_datetime(selected_date)
     start_date = selected_date - timedelta(days=7)
     
@@ -268,8 +283,11 @@ def plot_performance_timeline(df, player_name, selected_date, selected_microcycl
     
     return fig
 
+"""
+Classify player based on their performance metrics.
+"""
 def classify_player(df, player_name):
-    """Classify player based on their performance metrics."""
+    
     player_data = df[df['PlayerID'] == player_name]
     
     # Calculate z-scores for key metrics
