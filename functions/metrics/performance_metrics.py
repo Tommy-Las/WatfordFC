@@ -14,13 +14,13 @@ def get_performance_summary(session_data):
     """Get general performance metrics summary."""
     if session_data.empty:
         return {
-            'total_sprints': 0,
-            'minutes': 0,
+            'Sprints': 0,
+            'Mins': 0,
             'injury_prevention_index': 0
         }
     
     return {
-        'total_sprints': int(session_data['total_sprints'].sum()),
-        'minutes': int(session_data['minutes'].max()),
+        'Sprints': int(session_data['Sprints'].sum()),
+        'Mins': int(session_data['Mins'].max()),
         'injury_prevention_index': calculate_injury_prevention_index(session_data)
     }

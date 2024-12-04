@@ -21,23 +21,23 @@ def plot_speed_timeline(df, player_name, selected_date, selected_microcycle):
     start_date = selected_date - timedelta(days=7)
     
     timeline_data = df[
-        (df['player_name'] == player_name) & 
-        (df['date'] >= start_date) & 
-        (df['date'] <= selected_date)
-    ].sort_values('date')
+        (df['PlayerID'] == player_name) & 
+        (df['DATE'] >= start_date) & 
+        (df['DATE'] <= selected_date)
+    ].sort_values('DATE')
     
     timeline_data['date_label'] = timeline_data.apply(
-        lambda x: format_date_microcycle(x['date'], x['microcycle']), axis=1
+        lambda x: format_date_microcycle(x['DATE'], x['Microcycle']), axis=1
     )
     
-    all_time_max = timeline_data['max_speed'].max()
+    all_time_max = timeline_data['Max Speed'].max()
     
     fig = go.Figure()
     
     # Add max speed line
     fig.add_trace(go.Scatter(
         x=timeline_data['date_label'],
-        y=timeline_data['max_speed'],
+        y=timeline_data['Max Speed'],
         name='Max Speed',
         line=dict(color=COLORS['primary']),
         mode='lines+markers'
@@ -53,11 +53,11 @@ def plot_speed_timeline(df, player_name, selected_date, selected_microcycle):
     )
     
     # Highlight selected session
-    selected_session = timeline_data[timeline_data['microcycle'] == selected_microcycle]
+    selected_session = timeline_data[timeline_data['Microcycle'] == selected_microcycle]
     if not selected_session.empty:
         fig.add_trace(go.Scatter(
             x=selected_session['date_label'],
-            y=selected_session['max_speed'],
+            y=selected_session['Max Speed'],
             name='Selected Session',
             mode='markers',
             marker=dict(color=COLORS['secondary'], size=12, symbol='star')
@@ -83,13 +83,13 @@ def plot_acceleration_timeline(df, player_name, selected_date, selected_microcyc
     start_date = selected_date - timedelta(days=7)
     
     timeline_data = df[
-        (df['player_name'] == player_name) & 
-        (df['date'] >= start_date) & 
-        (df['date'] <= selected_date)
-    ].sort_values('date')
+        (df['PlayerID'] == player_name) & 
+        (df['DATE'] >= start_date) & 
+        (df['DATE'] <= selected_date)
+    ].sort_values('DATE')
     
     timeline_data['date_label'] = timeline_data.apply(
-        lambda x: format_date_microcycle(x['date'], x['microcycle']), axis=1
+        lambda x: format_date_microcycle(x['DATE'], x['Microcycle']), axis=1
     )
     
     fig = go.Figure()
@@ -97,7 +97,7 @@ def plot_acceleration_timeline(df, player_name, selected_date, selected_microcyc
     # Add acceleration line
     fig.add_trace(go.Scatter(
         x=timeline_data['date_label'],
-        y=timeline_data['max_acceleration'],
+        y=timeline_data['ACC'],
         name='Max Acceleration',
         line=dict(color=COLORS['primary']),
         mode='lines+markers'
@@ -106,25 +106,25 @@ def plot_acceleration_timeline(df, player_name, selected_date, selected_microcyc
     # Add deceleration line
     fig.add_trace(go.Scatter(
         x=timeline_data['date_label'],
-        y=timeline_data['max_deceleration'],
+        y=timeline_data['DEC'],
         name='Max Deceleration',
         line=dict(color=COLORS['secondary']),
         mode='lines+markers'
     ))
     
     # Highlight selected session
-    selected_session = timeline_data[timeline_data['microcycle'] == selected_microcycle]
+    selected_session = timeline_data[timeline_data['Microcycle'] == selected_microcycle]
     if not selected_session.empty:
         fig.add_trace(go.Scatter(
             x=selected_session['date_label'],
-            y=selected_session['max_acceleration'],
+            y=selected_session['ACC'],
             name='Selected Session (Accel)',
             mode='markers',
             marker=dict(color=COLORS['primary'], size=12, symbol='star')
         ))
         fig.add_trace(go.Scatter(
             x=selected_session['date_label'],
-            y=selected_session['max_deceleration'],
+            y=selected_session['ACC'],
             name='Selected Session (Decel)',
             mode='markers',
             marker=dict(color=COLORS['secondary'], size=12, symbol='star')
@@ -150,23 +150,23 @@ def plot_distance_timeline(df, player_name, selected_date, selected_microcycle):
     start_date = selected_date - timedelta(days=7)
     
     timeline_data = df[
-        (df['player_name'] == player_name) & 
-        (df['date'] >= start_date) & 
-        (df['date'] <= selected_date)
-    ].sort_values('date')
+        (df['PlayerID'] == player_name) & 
+        (df['DATE'] >= start_date) & 
+        (df['DATE'] <= selected_date)
+    ].sort_values('DATE')
     
     timeline_data['date_label'] = timeline_data.apply(
-        lambda x: format_date_microcycle(x['date'], x['microcycle']), axis=1
+        lambda x: format_date_microcycle(x['DATE'], x['Microcycle']), axis=1
     )
     
-    all_time_max = timeline_data['distance'].max()
+    all_time_max = timeline_data['TD'].max()
     
     fig = go.Figure()
     
     # Add distance line
     fig.add_trace(go.Scatter(
         x=timeline_data['date_label'],
-        y=timeline_data['distance'],
+        y=timeline_data['TD'],
         name='Total Distance',
         line=dict(color=COLORS['primary']),
         mode='lines+markers'
@@ -182,11 +182,11 @@ def plot_distance_timeline(df, player_name, selected_date, selected_microcycle):
     )
     
     # Highlight selected session
-    selected_session = timeline_data[timeline_data['microcycle'] == selected_microcycle]
+    selected_session = timeline_data[timeline_data['Microcycle'] == selected_microcycle]
     if not selected_session.empty:
         fig.add_trace(go.Scatter(
             x=selected_session['date_label'],
-            y=selected_session['distance'],
+            y=selected_session['TD'],
             name='Selected Session',
             mode='markers',
             marker=dict(color=COLORS['secondary'], size=12, symbol='star')
@@ -212,23 +212,23 @@ def plot_performance_timeline(df, player_name, selected_date, selected_microcycl
     start_date = selected_date - timedelta(days=7)
     
     timeline_data = df[
-        (df['player_name'] == player_name) & 
-        (df['date'] >= start_date) & 
-        (df['date'] <= selected_date)
-    ].sort_values('date')
+        (df['PlayerID'] == player_name) & 
+        (df['DATE'] >= start_date) & 
+        (df['DATE'] <= selected_date)
+    ].sort_values('DATE')
     
     timeline_data['date_label'] = timeline_data.apply(
-        lambda x: format_date_microcycle(x['date'], x['microcycle']), axis=1
+        lambda x: format_date_microcycle(x['DATE'], x['Microcycle']), axis=1
     )
     
-    all_time_max = timeline_data['total_sprints'].max()
+    all_time_max = timeline_data['Sprints'].max()
     
     fig = go.Figure()
     
     # Add sprints line
     fig.add_trace(go.Scatter(
         x=timeline_data['date_label'],
-        y=timeline_data['total_sprints'],
+        y=timeline_data['Sprints'],
         name='Total Sprints',
         line=dict(color=COLORS['primary']),
         mode='lines+markers'
@@ -244,11 +244,11 @@ def plot_performance_timeline(df, player_name, selected_date, selected_microcycl
     )
     
     # Highlight selected session
-    selected_session = timeline_data[timeline_data['microcycle'] == selected_microcycle]
+    selected_session = timeline_data[timeline_data['Microcycle'] == selected_microcycle]
     if not selected_session.empty:
         fig.add_trace(go.Scatter(
             x=selected_session['date_label'],
-            y=selected_session['total_sprints'],
+            y=selected_session['Sprints'],
             name='Selected Session',
             mode='markers',
             marker=dict(color=COLORS['secondary'], size=12, symbol='star')
@@ -270,11 +270,11 @@ def plot_performance_timeline(df, player_name, selected_date, selected_microcycl
 
 def classify_player(df, player_name):
     """Classify player based on their performance metrics."""
-    player_data = df[df['player_name'] == player_name]
+    player_data = df[df['PlayerID'] == player_name]
     
     # Calculate z-scores for key metrics
-    speed_zscore = (player_data['max_speed'].mean() - df['max_speed'].mean()) / df['max_speed'].std()
-    distance_zscore = (player_data['distance'].mean() - df['distance'].mean()) / df['distance'].std()
+    speed_zscore = (player_data['Max Speed'].mean() - df['Max Speed'].mean()) / df['Max Speed'].std()
+    distance_zscore = (player_data['TD'].mean() - df['TD'].mean()) / df['TD'].std()
     
     if speed_zscore > 1:
         return "High Intensity"

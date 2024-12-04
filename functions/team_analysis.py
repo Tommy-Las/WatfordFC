@@ -22,49 +22,49 @@ def calculate_team_metrics(df, selected_date=None, selected_microcycle=None):
     if selected_date and selected_microcycle:
         # Filter for selected session metrics
         session_metrics = metrics_df[
-            (metrics_df['date'].dt.date == selected_date) & 
-            (metrics_df['microcycle'] == selected_microcycle)
+            (metrics_df['DATE'].dt.date == selected_date) & 
+            (metrics_df['Microcycle'] == selected_microcycle)
         ]
         
         if not session_metrics.empty:
-            return session_metrics.groupby(['date', 'microcycle']).agg({
-                'distance': 'mean',
-                'max_speed': 'mean',
-                'avg_speed': 'mean',
-                'total_sprints': 'sum',
-                'minutes': 'sum',
-                'max_acceleration': 'max',
-                'max_deceleration': 'min'
+            return session_metrics.groupby(['DATE', 'Microcycle']).agg({
+                'TD': 'mean',
+                'Max Speed': 'mean',
+                'Avg Speed Season': 'mean',
+                'Sprints': 'sum',
+                'Mins': 'sum',
+                'ACC': 'max',
+                'DEC': 'min'
             }).reset_index()
     
     # Calculate metrics for all sessions
-    return metrics_df.groupby(['date', 'microcycle']).agg({
-        'distance': 'mean',
-        'max_speed': 'mean',
-        'avg_speed': 'mean',
-        'total_sprints': 'sum',
-        'minutes': 'sum',
-        'max_acceleration': 'max',
-        'max_deceleration': 'min'
+    return metrics_df.groupby(['DATE', 'Microcycle']).agg({
+        'TD': 'mean',
+        'Max Speed': 'mean',
+        'Avg Speed Season': 'mean',
+        'Sprints': 'sum',
+        'Mins': 'sum',
+        'ACC': 'max',
+        'DEC': 'min'
     }).reset_index()
 
 def plot_team_metrics(team_metrics, selected_date=None):
     """Create visualizations for team metrics showing timeline for last 7 days."""
     if selected_date is None:
-        selected_date = team_metrics['date'].max()
+        selected_date = team_metrics['DATE'].max()
     else:
         selected_date = pd.to_datetime(selected_date)
     
     # Filter data for last 7 days from selected date
     start_date = selected_date - timedelta(days=7)
     timeline_data = team_metrics[
-        (team_metrics['date'] >= start_date) & 
-        (team_metrics['date'] <= selected_date)
-    ].sort_values('date')
+        (team_metrics['DATE'] >= start_date) & 
+        (team_metrics['DATE'] <= selected_date)
+    ].sort_values('DATE')
     
     # Format dates for display
     timeline_data['date_label'] = timeline_data.apply(
-        lambda x: format_date_microcycle(x['date'], x['microcycle']), axis=1
+        lambda x: format_date_microcycle(x['DATE'], x['Microcycle']), axis=1
     )
     
     # Team distance timeline
@@ -73,14 +73,14 @@ def plot_team_metrics(team_metrics, selected_date=None):
     # Add distance line
     fig_team_distance.add_trace(go.Scatter(
         x=timeline_data['date_label'],
-        y=timeline_data['distance'],
+        y=timeline_data['TD'],
         name='Average Distance',
         line=dict(color=COLORS['primary']),
         mode='lines+markers'
     ))
     
     # Add all-time max reference line
-    all_time_max_distance = timeline_data['distance'].max()
+    all_time_max_distance = timeline_data['TD'].max()
     fig_team_distance.add_hline(
         y=all_time_max_distance,
         line_dash="dash",
@@ -106,14 +106,14 @@ def plot_team_metrics(team_metrics, selected_date=None):
     # Add sprints line
     fig_team_sprints.add_trace(go.Scatter(
         x=timeline_data['date_label'],
-        y=timeline_data['total_sprints'],
+        y=timeline_data['Sprints'],
         name='Total Sprints',
         line=dict(color=COLORS['primary']),
         mode='lines+markers'
     ))
     
     # Add all-time max reference line
-    all_time_max_sprints = timeline_data['total_sprints'].max()
+    all_time_max_sprints = timeline_data['Sprints'].max()
     fig_team_sprints.add_hline(
         y=all_time_max_sprints,
         line_dash="dash",

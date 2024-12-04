@@ -29,13 +29,13 @@ def render_speed_tab(df, player_name, session_data, selected_date, selected_micr
     speed_metrics = get_speed_metrics(df, player_name, session_data)
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("Max Speed (km/h)", f"{speed_metrics['max_speed']:.1f}")
+        st.metric("Max Speed (km/h)", f"{speed_metrics['Max Speed']:.1f}")
     with col2:
-        st.metric("Relative Max Speed (%)", f"{speed_metrics['relative_max_speed']:.1f}")
+        st.metric("Relative Max Speed (%)", f"{speed_metrics['% Max Speed']:.1f}")
     with col3:
-        st.metric("Avg Speed (km/h)", f"{speed_metrics['avg_speed']:.1f}")
+        st.metric("Avg Speed (km/h)", f"{speed_metrics['Avg Speed Season']:.1f}")
     with col4:
-        st.metric("Season Max Speed (km/h)", f"{speed_metrics['season_max_speed']:.1f}")
+        st.metric("Season Max Speed (km/h)", f"{speed_metrics['Max Speed Season']:.1f}")
     
     st.plotly_chart(
         plot_speed_timeline(df, player_name, selected_date, selected_microcycle),
@@ -47,13 +47,13 @@ def render_acceleration_tab(df, player_name, session_data, selected_date, select
     accel_metrics = get_acceleration_metrics(df, player_name, session_data)
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("Max Acceleration (m/s²)", f"{accel_metrics['max_acceleration']:.1f}")
+        st.metric("Max Acceleration (m/s²)", f"{accel_metrics['ACC']:.1f}")
     with col2:
-        st.metric("Relative Acceleration (%)", f"{accel_metrics['relative_acceleration']:.1f}")
+        st.metric("Relative Acceleration (%)", f"{accel_metrics['ACC_Rel']:.1f}")
     with col3:
-        st.metric("Max Deceleration (m/s²)", f"{accel_metrics['max_deceleration']:.1f}")
+        st.metric("Max Deceleration (m/s²)", f"{accel_metrics['DEC']:.1f}")
     with col4:
-        st.metric("Relative Deceleration (%)", f"{accel_metrics['relative_deceleration']:.1f}")
+        st.metric("Relative Deceleration (%)", f"{accel_metrics['DEC_Rel']:.1f}")
     
     st.plotly_chart(
         plot_acceleration_timeline(df, player_name, selected_date, selected_microcycle),
@@ -65,9 +65,9 @@ def render_distance_tab(df, player_name, session_data, selected_date, selected_m
     distance_metrics = get_distance_metrics(df, player_name, session_data)
     col1, col2 = st.columns(2)
     with col1:
-        st.metric("Total Distance (m)", f"{distance_metrics['total_distance']:.0f}")
+        st.metric("Total Distance (m)", f"{distance_metrics['TD']:.0f}")
     with col2:
-        st.metric("Relative Distance (%)", f"{distance_metrics['relative_distance']:.1f}")
+        st.metric("Relative Distance (%)", f"{distance_metrics['TD_Rel']:.1f}")
     
     st.plotly_chart(
         plot_distance_timeline(df, player_name, selected_date, selected_microcycle),
@@ -79,9 +79,9 @@ def render_performance_tab(df, player_name, session_data, selected_date, selecte
     perf_metrics = get_performance_summary(session_data)
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("Total Sprints", perf_metrics['total_sprints'])
+        st.metric("Total Sprints", perf_metrics['Sprints'])
     with col2:
-        st.metric("Minutes", perf_metrics['minutes'])
+        st.metric("Minutes", perf_metrics['Mins'])
     with col3:
         st.metric("Player Classification", classify_player(df, player_name))
     with col4:
@@ -94,19 +94,19 @@ def render_performance_tab(df, player_name, session_data, selected_date, selecte
 
 def get_player_session_options(df, player_name):
     """Get session options for a specific player sorted by date in descending order."""
-    player_sessions = df[df['player_name'] == player_name][['date', 'microcycle']].drop_duplicates()
-    player_sessions = player_sessions.sort_values('date', ascending=False)
+    player_sessions = df[df['PlayerID'] == player_name][['DATE', 'Microcycle']].drop_duplicates()
+    player_sessions = player_sessions.sort_values('DATE', ascending=False)
     player_sessions['date_label'] = player_sessions.apply(
-        lambda x: f"{x['date'].strftime('%Y %B %d')} - {x['microcycle']}", axis=1
+        lambda x: f"{x['DATE'].strftime('%Y %B %d')} - {x['Microcycle']}", axis=1
     )
     return player_sessions
 
 def get_sorted_session_options(df):
     """Get all session options sorted by date in descending order."""
-    session_options = df[['date', 'microcycle']].drop_duplicates()
-    session_options = session_options.sort_values('date', ascending=False)
+    session_options = df[['DATE', 'Microcycle']].drop_duplicates()
+    session_options = session_options.sort_values('DATE', ascending=False)
     session_options['date_label'] = session_options.apply(
-        lambda x: f"{x['date'].strftime('%Y %B %d')} - {x['microcycle']}", axis=1
+        lambda x: f"{x['DATE'].strftime('%Y %B %d')} - {x['Microcycle']}", axis=1
     )
     return session_options
 
@@ -122,10 +122,10 @@ def main():
         choice = show_menu()
         
         if choice == "Player Analysis":
-            st.title("Player Physical Profile Analysis")
+            st.title("Player Physical Performance Dashboard")
             
             # Player selection
-            player_name = st.selectbox("Select Player", sorted(df['player_name'].unique()))
+            player_name = st.selectbox("Select Player", sorted(df['PlayerID'].unique()))
             
             # Get sessions for selected player
             player_sessions = get_player_session_options(df, player_name)
@@ -139,16 +139,16 @@ def main():
                 
                 selected_date = player_sessions[
                     player_sessions['date_label'] == selected_session
-                ]['date'].iloc[0].date()
+                ]['DATE'].iloc[0].date()
                 selected_microcycle = player_sessions[
                     player_sessions['date_label'] == selected_session
-                ]['microcycle'].iloc[0]
+                ]['Microcycle'].iloc[0]
                 
                 # Get session data
                 session_data = df[
-                    (df['date'].dt.date == selected_date) & 
-                    (df['microcycle'] == selected_microcycle) &
-                    (df['player_name'] == player_name)
+                    (df['DATE'].dt.date == selected_date) & 
+                    (df['Microcycle'] == selected_microcycle) &
+                    (df['PlayerID'] == player_name)
                 ]
                 
                 if not session_data.empty:
@@ -191,10 +191,10 @@ def main():
             
             selected_date = session_options[
                 session_options['date_label'] == selected_session
-            ]['date'].iloc[0].date()
+            ]['DATE'].iloc[0].date()
             selected_microcycle = session_options[
                 session_options['date_label'] == selected_session
-            ]['microcycle'].iloc[0]
+            ]['Microcycle'].iloc[0]
             
             # Calculate team metrics
             team_metrics = calculate_team_metrics(df, selected_date, selected_microcycle)
@@ -204,13 +204,13 @@ def main():
                 st.header("Team Overview")
                 col1, col2, col3, col4 = st.columns(4)
                 with col1:
-                    st.metric("Average Distance (m)", f"{team_metrics['distance'].mean():.0f}")
+                    st.metric("Average Distance (m)", f"{team_metrics['TD'].mean():.0f}")
                 with col2:
-                    st.metric("Average Max Speed (km/h)", f"{team_metrics['max_speed'].mean():.1f}")
+                    st.metric("Average Max Speed (km/h)", f"{team_metrics['Max Speed'].mean():.1f}")
                 with col3:
-                    st.metric("Total Team Sprints", f"{team_metrics['total_sprints'].sum():.0f}")
+                    st.metric("Total Team Sprints", f"{team_metrics['Sprints'].sum():.0f}")
                 with col4:
-                    st.metric("Total Team Minutes", f"{team_metrics['minutes'].sum():.0f}")
+                    st.metric("Total Team Minutes", f"{team_metrics['Mins'].sum():.0f}")
                 
                 # Team visualizations
                 st.header("Team Performance Visualizations")
