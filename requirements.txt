@@ -8,3 +8,4 @@ openpyxl
 imblearn
 seaborn
 statsmodels
+tensorflow
