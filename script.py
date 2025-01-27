@@ -92,13 +92,32 @@ def process_and_merge_dfs(df_gps, df_speed):
         df_gps["DATE"] = pd.to_datetime(df_gps["DATE"], dayfirst=True)
         df_speed["DATE"] = pd.to_datetime(df_speed["DATE"], dayfirst=True)
 
+        # Drop NULL values for 'PLAYER'
+        df_gps = df_gps.dropna(subset=['PLAYER'])
+
+        # Convert ID and PLAYER columns to the same data type - integers
+        df_gps.loc[:, 'PLAYER'] = df_gps['PLAYER'].astype(int)
+        df_speed.loc[:,'ID'] = df_speed['ID'].astype(int)
+
         # Get the latest date in the DATE column
         latest_date = df_gps["DATE"].max()
+        
+        # Calculate the start date (20 days before the latest date)
+        start_date = latest_date - pd.Timedelta(days=20)
+
+        # Filter the dataframe for rows between the start_date and latest_date (inclusive)
+        df_gps_filtered = df_gps[(df_gps['DATE'] >= start_date) & (df_gps['DATE'] <= latest_date)]
+
         # Example merge operation
-        merged_df = pd.merge(df_gps, df_speed, on="DATE", how="inner")
+        merged_df = pd.merge(df_gps_filtered, df_speed, on="DATE", how="inner")
+        # Perform an inner join on matching DATE and PLAYER/ID values
+        merged_df = df_gps_filtered.merge(df_speed, left_on=['DATE', 'PLAYER'], right_on=['DATE', 'ID'], how='inner')
 
         print("DataFrames processed and merged successfully.")
         return merged_df
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None
 
     except KeyError as key_error:
         print(
