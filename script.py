@@ -24,16 +24,15 @@ def read_files():
         files = [f for f in os.listdir(current_dir) if os.path.isfile(f)]
 
         # Ensure there are at least two files in the folder
-        if len(files) < 2:
+        if len(files) < 1:
             raise FileNotFoundError(
-                "Not enough files in the folder! Ensure at least two files are present."
+                "Not enough files in the folder! Ensure the file is present."
             )
 
-        # Read Excel files
-        df_gps = pd.read_excel("data/GPS 2018-2023_NoContact.xlsx")
-        df_speed = pd.read_excel("data/max_speed.xlsx")
+        # Read Excel file
+        df = pd.read_excel("Base De Datos 2024-25 SDC.xlsx")
 
-        return df_gps, df_speed
+        return df
 
     except FileNotFoundError as fnf_error:
         print(f"File not found: {fnf_error}")
@@ -133,17 +132,48 @@ def process_and_merge_dfs(df_gps, df_speed):
     except Exception as e:
         print(f"An error occurred while processing and merging DataFrames: {e}")
         return None
+    
+selected_cols = ['Column1', 'injury', 'MD', 'Session Date',
+       'Total Time', 'Total Distance', 'Distance m/min',
+       'Distance Zone 4 (Absolute)', 'Zone 4 m/min',
+       'Distance Zone 5 (Absolute)', 'Zone 5 m/min',
+       'Distance Zone 6 (Absolute)', 'Zone 6 m/min', 'Sprints',
+       '% Max Speed', 'ACC B1-3', 'DEC B1-3']
+
+rename_map = {
+    'Column1': 'PlayerID',
+    'injury': 'Injury',
+    'MD': 'Session',
+    'Session Date': 'Date',
+    'Total Time': 'Mins',
+    'Total Distance': 'TD',
+    'Distance m/min': 'TD /min',
+    'Distance Zone 4 (Absolute)': 'xxxx',
+    'Zone 4 m/min': '>xxxx /min',
+    'Distance Zone 5 (Absolute)': '>19.8',
+    'Zone 5 m/min': '>19.8 m/min',
+    'Distance Zone 6 (Absolute)': '>25',
+    'Zone 6 m/min': '>25 /min',
+    'Sprints': 'Sprints',
+    '% Max Speed': '% Max Speed',
+    'ACC B1-3': 'ACC',
+    'DEC B1-3': 'DEC'
+}
+
+cols_float = ['Total Time', 'Total Distance', 'Distance m/min',
+       'Distance Zone 4 (Absolute)', 'Zone 4 m/min',
+       'Distance Zone 5 (Absolute)', 'Zone 5 m/min',
+       'Distance Zone 6 (Absolute)', 'Zone 6 m/min', 'Sprints',
+       '% Max Speed', 'ACC B1-3', 'DEC B1-3']
 
 def data_processing(df):
-    cols = ['Total D', '>19.8', '> 25 Km/h', 'ACC',
-       'DEC', 'ID', 'Max Speed', 'Sprints', 'MINUTES', 'Max Speed Season',
-       'Avg Speed Season', '% Max Speed',
-       '%Speed diference against max. Speed average']
-    
-    df[cols] = df[cols].astype(float)
-    df.rename(columns=column_rename_dict, inplace=True)
-    
-    df = session_OHE(df)
+    df = df[selected_cols]
+
+    df[cols_float] = df[cols_float].astype(float)
+    df.rename(columns=rename_map, inplace=True)
+
+    df["Date"] = pd.to_datetime(df["Date"], dayfirst=True)
+    # df = session_OHE(df)
 
     return df
 
@@ -291,21 +321,23 @@ columns_to_drop = ['TD-7-avg', 'TD-7-std',
 
 if __name__ == "__main__":
     # Call the function to process files in the current directory
-    df_gps, df_speed = read_files()
+    data_df = read_files()
 
-    if df_gps is None or df_speed is None:
+    if data_df is None:
         print("File reading failed. Exiting program.")
         exit()
 
+    data_df.columns
+
     # Process duplicates (placeholder function)
-    df_gps, df_speed = process_duplicates(df_gps, df_speed)
+    #df_gps, df_speed = process_duplicates(df_gps, df_speed)
 
     # Process and merge DataFrames
-    merged_df = process_and_merge_dfs(df_gps, df_speed)
+    #merged_df = process_and_merge_dfs(df_gps, df_speed)
         
-    merged_df = data_processing(merged_df)
+    processed_df = data_processing(data_df)
 
-    merged_df.info()
+    processed_df["Session"].unique()
 
     cumulative_df = calcular_acumulado(merged_df, cols_calculate_loads, [3,7,21])
     
