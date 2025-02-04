@@ -14,76 +14,6 @@ Steps to take:
 - Get list of players of last session and verify they have enough data to perform calculations
 
 """
-
-
-def read_files():
-    try:
-        # Get the current directory
-        current_dir = os.getcwd()
-
-        # List all files in the current directory
-        files = [f for f in os.listdir(current_dir) if os.path.isfile(f)]
-
-        # Ensure there are at least two files in the folder
-        if len(files) < 1:
-            raise FileNotFoundError(
-                "Not enough files in the folder! Ensure the file is present."
-            )
-
-        # Read Excel file
-        df = pd.read_excel("Base De Datos 2024-25 SDC.xlsx")
-
-        return df
-
-    except FileNotFoundError as fnf_error:
-        print(f"File not found: {fnf_error}")
-        return None, None
-
-    except Exception as e:
-        print(f"An error occurred while reading the files: {e}")
-        return None, None
-
-
-def process_duplicates(df):
-    # Define columns to sum
-    columns_to_sum = ["Injury", "Mins", "TD", ">19.8", ">25", "Sprints", "ACC", "DEC"]
-
-    # Define columns to select the first value
-    columns_to_first = ["PlayerID", "Session", "Date"]
-
-    # Define columns to select the maximum value
-    columns_to_max = ["% Max Speed"]
-
-    # Print the duplicate rows
-    duplicates = df[df.duplicated(subset=["PlayerID", "Date"], keep=False)]
-    print("Duplicates before processing:")
-    print(duplicates)
-
-    # Function to set MD logic
-    def set_md_logic(values):
-        if "MD" in values.values:
-            return "MD"
-        values.values[0]
-
-    # Group by the duplicate subset and aggregate
-    df_aggregated = duplicates.groupby(["PlayerID", "Date"], as_index=False).agg(
-        {
-            **{col: "sum" for col in columns_to_sum},
-            **{col: "first" for col in columns_to_first},
-            **{col: "max" for col in columns_to_max},
-            "Session": set_md_logic,  # Custom logic for MD column
-        }
-    )
-
-    # Ensure non-duplicated rows are preserved by combining them back
-    final_df = pd.concat(
-        [df[~df.duplicated(subset=["PlayerID", "Date"], keep=False)], df_aggregated],
-        ignore_index=True,
-    )
-
-    return final_df
-
-
 selected_cols = [
     "Column1",
     "injury",
@@ -125,6 +55,103 @@ cols_float = [
     "DEC B1-3",
 ]
 
+cols_calculate_loads = ["TD", ">19.8", ">25", "ACC", "DEC", "Sprints", "% Max Speed"]
+
+cols_calculate_fatigues = ["TD", ">19.8", ">25", "ACC", "DEC"]
+
+columns_to_drop = [
+    "TD-7-avg",
+    "TD-7-std",
+    ">19.8-7-avg",
+    ">19.8-7-std",
+    ">25-7-avg",
+    ">25-7-std",
+    "ACC-7-avg",
+    "ACC-7-std",
+    "DEC-7-avg",
+    "DEC-7-std",
+    "Sprints-7-avg",
+    "Sprints-7-std",
+    "TD-21-avg",
+    "TD-21-std",
+    ">19.8-21-avg",
+    ">19.8-21-std",
+    ">25-21-avg",
+    ">25-21-std",
+    "ACC-21-avg",
+    "ACC-21-std",
+    "DEC-21-avg",
+    "DEC-21-std",
+    "Sprints-21-avg",
+    "Sprints-21-std",
+]
+
+def read_files():
+    try:
+        # Get the current directory
+        current_dir = os.getcwd()
+
+        # List all files in the current directory
+        files = [f for f in os.listdir(current_dir) if os.path.isfile(f)]
+
+        # Ensure there are at least two files in the folder
+        if len(files) < 1:
+            raise FileNotFoundError(
+                "Not enough files in the folder! Ensure the file is present."
+            )
+
+        # Read Excel file
+        df = pd.read_excel("Base De Datos 2024-25 SDC.xlsx")
+
+        return df
+
+    except FileNotFoundError as fnf_error:
+        print(f"File not found: {fnf_error}")
+        return None, None
+
+    except Exception as e:
+        print(f"An error occurred while reading the files: {e}")
+        return None, None
+
+
+def process_duplicates(df):
+    # Define columns to sum
+    columns_to_sum = ["Injury", "Mins", "TD", ">19.8", ">25", "Sprints", "ACC", "DEC"]
+
+    # Define columns to select the first value
+    columns_to_first = ["PlayerID", "Session", "Date"]
+
+    # Define columns to select the maximum value
+    columns_to_max = ["% Max Speed"]
+
+    # Print the duplicate rows
+    duplicates = df[df.duplicated(subset=["PlayerID", "Date"], keep=False)]
+    # print("Duplicates before processing:")
+    # print(duplicates)
+
+    # Function to set MD logic
+    def set_md_logic(values):
+        if "MD" in values.values:
+            return "MD"
+        values.values[0]
+
+    # Group by the duplicate subset and aggregate
+    df_aggregated = duplicates.groupby(["PlayerID", "Date"], as_index=False).agg(
+        {
+            **{col: "sum" for col in columns_to_sum},
+            **{col: "first" for col in columns_to_first},
+            **{col: "max" for col in columns_to_max},
+            "Session": set_md_logic,  # Custom logic for MD column
+        }
+    )
+
+    # Ensure non-duplicated rows are preserved by combining them back
+    final_df = pd.concat(
+        [df[~df.duplicated(subset=["PlayerID", "Date"], keep=False)], df_aggregated],
+        ignore_index=True,
+    )
+
+    return final_df
 
 def clean_session_value(session):
     # Check for the pattern +X/-X and extract the -X part
@@ -137,20 +164,31 @@ def clean_session_value(session):
 def data_processing(df):
     df = df[selected_cols]
 
-    df[cols_float] = df[cols_float].astype(float)
-    df.rename(columns=rename_map, inplace=True)
+    df.loc[: , cols_float] = df.loc[:, cols_float].astype(float)
+    df = df.rename(columns=rename_map)
 
-    df["Date"] = pd.to_datetime(df["Date"], dayfirst=True)
+
+    df.loc[:,"Date"] = pd.to_datetime(df.loc[:,"Date"], dayfirst=True)
 
     # Select latest day and last days
+    # df = df.groupby("PlayerID", group_keys=False).apply(
+    #     lambda group: group[
+    #         group["Date"] >= (group["Date"].max() - pd.Timedelta(days=20))
+    #     ]
+    # )
+
+    # Target date and past 20 days
+    target_date = pd.Timestamp('2024-10-04')
+    date_range_start = target_date - pd.Timedelta(days=20)
+
     df = df.groupby("PlayerID", group_keys=False).apply(
-        lambda group: group[
-            group["Date"] >= (group["Date"].max() - pd.Timedelta(days=20))
-        ]
+    lambda group: group[
+        (group["Date"] >= date_range_start) & (group["Date"] <= target_date)
+    ]
     )
 
     # Example usage on a DataFrame column
-    df["Session"] = df["Session"].apply(clean_session_value)
+    # df["Session"] = df["Session"].apply(clean_session_value)
 
     df = process_duplicates(df)
     # df = session_OHE(df)
@@ -179,16 +217,16 @@ def calcular_acumulado(df, columnas_calcular, dias):
 
         # Create a full date range for the player (from the first to the last recorded date)
         full_date_range = pd.date_range(
-            start=player_data["DATE"].min(), end=player_data["DATE"].max(), freq="D"
+            start=player_data["Date"].min(), end=player_data["Date"].max(), freq="D"
         )
 
-        # Set 'DATE' as the index and reindex to fill missing dates with zeros
+        # Set 'date' as the index and reindex to fill missing dates with zeros
         player_data = (
-            player_data.set_index("DATE")
+            player_data.set_index("Date")
             .reindex(full_date_range, fill_value=0)
             .reset_index()
         )
-        player_data.rename(columns={"index": "DATE"}, inplace=True)
+        player_data.rename(columns={"index": "Date"}, inplace=True)
         player_data["PlayerID"] = player_id
 
         # Perform rolling calculations for each metric, excluding the current day
@@ -232,8 +270,8 @@ def calcular_acumulado(df, columnas_calcular, dias):
 
 def filter_players(df):
     # Step 1: Select the rows with the latest date
-    latest_date = df["DATE"].max()
-    latest_date_rows = df[df["DATE"] == latest_date]
+    latest_date = df["Date"].max()
+    latest_date_rows = df[df["Date"] == latest_date]
 
     # Step 2: Iterate through each row to check TD, TD-3, and TD7 values
     for index, row in latest_date_rows.iterrows():
@@ -241,6 +279,8 @@ def filter_players(df):
             # Print PlayerID and drop the row
             print(f"PlayerID {row['PlayerID']} does not have enough information.")
             df = df.drop(index)
+
+    df = df.reset_index(drop=True)
 
     return df
 
@@ -284,50 +324,27 @@ def session_OHE(df):
 
 
 def process_data_testing(df):
-    latest_date = df["DATE"].max()
-    latest_date_rows = df[df["DATE"] == latest_date]
+    latest_date = df["Date"].max()
+    latest_date_rows = df[df["Date"] == latest_date]
 
-    columns_to_rename = ["TD", ">19.8", ">25", "ACC", "DEC", "Sprints", "Mins"]
+    columns_to_rename = ["TD", ">19.8", ">25", "ACC", "DEC", "Sprints", "Mins", "% Max Speed"]
 
     # Rename columns by adding -1
     latest_date_rows.rename(
         columns={col: f"{col}-1" for col in columns_to_rename}, inplace=True
     )
 
+    latest_date_rows = latest_date_rows.reset_index(drop=True)
     return latest_date_rows
 
 
-cols_calculate_loads = ["TD", ">19.8", ">25", "ACC", "DEC", "Sprints", "% Max Speed"]
+metrics_test = ['TD-1', '>19.8-1', '>25-1', 'ACC-1', 'DEC-1', 'Sprints-1','Mins-1', '% Max Speed-1', 'TD-3', '>19.8-3', '>25-3', 'ACC-3',
+'DEC-3', 'Sprints-3', 'TD-7', '>19.8-7', '>25-7', 'ACC-7',
+'DEC-7', 'Sprints-7', 'TD-21', '>19.8-21', '>25-21', 'ACC-21',
+'DEC-21', 'Sprints-21', 'TD_ACWR', 'TD_MSWR', '>19.8_ACWR',
+'>19.8_MSWR', '>25_ACWR', '>25_MSWR', 'ACC_ACWR', 'ACC_MSWR',
+'DEC_ACWR', 'DEC_MSWR']
 
-
-cols_calculate_fatigues = ["TD", ">19.8", ">25", "ACC", "DEC"]
-
-columns_to_drop = [
-    "TD-7-avg",
-    "TD-7-std",
-    ">19.8-7-avg",
-    ">19.8-7-std",
-    ">25-7-avg",
-    ">25-7-std",
-    "ACC-7-avg",
-    "ACC-7-std",
-    "DEC-7-avg",
-    "DEC-7-std",
-    "Sprints-7-avg",
-    "Sprints-7-std",
-    "TD-21-avg",
-    "TD-21-std",
-    ">19.8-21-avg",
-    ">19.8-21-std",
-    ">25-21-avg",
-    ">25-21-std",
-    "ACC-21-avg",
-    "ACC-21-std",
-    "DEC-21-avg",
-    "DEC-21-std",
-    "Sprints-21-avg",
-    "Sprints-21-std",
-]
 
 if __name__ == "__main__":
     # Call the function to process files in the current directory
@@ -337,76 +354,33 @@ if __name__ == "__main__":
         print("File reading failed. Exiting program.")
         exit()
 
-    data_df.head()
-
-    data_df.MD.unique()
-
     processed_df = data_processing(data_df)
 
-    processed_df["Session"].unique()
-
-    processed_df.head()
-
-    cumulative_df = calcular_acumulado(merged_df, cols_calculate_loads, [3, 7, 21])
+    cumulative_df = calcular_acumulado(processed_df, cols_calculate_loads, [3, 7, 21])
 
     # Filter players with enough data
-
     filtered_df = filter_players(cumulative_df)
 
     complete_df = calculate_fatigue_metrics(filtered_df, cols_calculate_fatigues)
 
     test_df = process_data_testing(complete_df)
 
-    metrics_train = [
-        "TD-1",
-        ">19.8-1",
-        ">25-1",
-        "ACC-1",
-        "DEC-1",
-        "Sprints-1",
-        "Mins-1",
-        "% Max Speed-1",
-        "TD-3",
-        ">19.8-3",
-        ">25-3",
-        "ACC-3",
-        "DEC-3",
-        "Sprints-3",
-        "TD-7",
-        ">19.8-7",
-        ">25-7",
-        "ACC-7",
-        "DEC-7",
-        "Sprints-7",
-        "TD-21",
-        ">19.8-21",
-        ">25-21",
-        "ACC-21",
-        "DEC-21",
-        "Sprints-21",
-        "TD_ACWR",
-        "TD_MSWR",
-        ">19.8_ACWR",
-        ">19.8_MSWR",
-        ">25_ACWR",
-        ">25_MSWR",
-        "ACC_ACWR",
-        "ACC_MSWR",
-        "DEC_ACWR",
-        "DEC_MSWR",
-        "Session_M+1",
-        "Session_M+2",
-        "Session_M+3",
-        "Session_M-1",
-        "Session_M-2",
-        "Session_M-3",
-        "Session_M-4",
-        "Session_M-5",
-        "Session_MD",
-    ]
-
     # Load the classifier
-    model = joblib.load("xgb_classifier_model.pkl")
+    model = joblib.load("xgb_classifier_model_ns.pkl")
 
-    # predictions = model.predict(X_test)  # Assuming X_test is your test data
-    # print(predictions)
+    test_df_original = test_df.copy()
+
+    predictions = model.predict_proba(test_df[metrics_test])[:, 1] * 100
+    print(predictions)
+
+    # Select PlayerID and Injury columns from the test_df_original
+    result_df = test_df_original[['PlayerID', 'Injury']].copy()
+
+    # Add the Probability column using the predictions
+    result_df['Probability'] = predictions
+
+    
+
+
+
+    
