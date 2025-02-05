@@ -178,7 +178,7 @@ def data_processing(df):
     # )
 
     # Target date and past 20 days
-    target_date = pd.Timestamp('2024-10-04')
+    target_date = pd.Timestamp('2025-01-20')
     date_range_start = target_date - pd.Timedelta(days=20)
 
     df = df.groupby("PlayerID", group_keys=False).apply(
@@ -188,7 +188,7 @@ def data_processing(df):
     )
 
     # Example usage on a DataFrame column
-    # df["Session"] = df["Session"].apply(clean_session_value)
+    df["Session"] = df["Session"].apply(clean_session_value)
 
     df = process_duplicates(df)
     # df = session_OHE(df)
@@ -279,6 +279,7 @@ def filter_players(df):
             # Print PlayerID and drop the row
             print(f"PlayerID {row['PlayerID']} does not have enough information.")
             df = df.drop(index)
+    
 
     df = df.reset_index(drop=True)
 
@@ -309,10 +310,6 @@ def session_OHE(df):
     # Strip spaces
     df["Session"] = df["Session"].str.replace(" ", "", regex=False)
 
-    # Replace ['MD', 'MD(HOME)', 'MD(AWAY)'] with 'MD'
-    md_values = ["MD", "MD(HOME)", "MD(AWAY)"]
-    df["Session"] = df["Session"].replace(md_values, "MD")
-
     # Perform one-hot encoding
     encoded_df = pd.get_dummies(df, columns=["Session"], prefix="Session")
 
@@ -322,6 +319,26 @@ def session_OHE(df):
     # encoded_df = final_df.dropna(subset=one_hot_columns)
     return encoded_df
 
+import pandas as pd
+
+def one_hot_encode_session(df, column_name, session_values):
+    
+    # Create column names for the one-hot encoding
+    column_names = [f"Session_{'M' + s[2:] if '+' in s or '-' in s else s}" for s in session_values]
+    
+    # Initialize a zero-initialized DataFrame for one-hot encoding with the same index as the input DataFrame
+    one_hot_df = pd.DataFrame(0, index=df.index, columns=column_names)
+
+    # Correct mapping of session values to columns
+    for idx in df.index:
+        session = df.loc[idx, column_name]
+        if session == 'MD':
+            one_hot_df.loc[idx, 'Session_MD'] = 1
+        else:
+            one_hot_df.loc[idx, f"Session_M{session[2:]}"] = 1  # Handles both + and - cases
+    
+    # Concatenate the original DataFrame with the one-hot encoding DataFrame
+    return pd.concat([df, one_hot_df], axis=1)
 
 def process_data_testing(df):
     latest_date = df["Date"].max()
@@ -334,16 +351,34 @@ def process_data_testing(df):
         columns={col: f"{col}-1" for col in columns_to_rename}, inplace=True
     )
 
-    latest_date_rows = latest_date_rows.reset_index(drop=True)
-    return latest_date_rows
+    target_sessions = ['MD', 'MD+1', 'MD+2', 'MD+3', 'MD-5', 'MD-4', 'MD-3', 'MD-2', 'MD-1']
+
+    # Filter DataFrame
+    latest_date_rows_filtered = latest_date_rows[latest_date_rows['Session'].isin(target_sessions)]
+    
+    latest_date_rows_filtered_OHE = one_hot_encode_session(latest_date_rows_filtered, 'Session', target_sessions)
+    
+    latest_date_rows_filtered_OHE = latest_date_rows_filtered_OHE.reset_index(drop=True)
+
+    return latest_date_rows_filtered_OHE
 
 
-metrics_test = ['TD-1', '>19.8-1', '>25-1', 'ACC-1', 'DEC-1', 'Sprints-1','Mins-1', '% Max Speed-1', 'TD-3', '>19.8-3', '>25-3', 'ACC-3',
-'DEC-3', 'Sprints-3', 'TD-7', '>19.8-7', '>25-7', 'ACC-7',
-'DEC-7', 'Sprints-7', 'TD-21', '>19.8-21', '>25-21', 'ACC-21',
-'DEC-21', 'Sprints-21', 'TD_ACWR', 'TD_MSWR', '>19.8_ACWR',
-'>19.8_MSWR', '>25_ACWR', '>25_MSWR', 'ACC_ACWR', 'ACC_MSWR',
-'DEC_ACWR', 'DEC_MSWR']
+# metrics_test = ['TD-1', '>19.8-1', '>25-1', 'ACC-1', 'DEC-1', 'Sprints-1','Mins-1', '% Max Speed-1', 'TD-3', '>19.8-3', '>25-3', 'ACC-3',
+# 'DEC-3', 'Sprints-3', 'TD-7', '>19.8-7', '>25-7', 'ACC-7',
+# 'DEC-7', 'Sprints-7', 'TD-21', '>19.8-21', '>25-21', 'ACC-21',
+# 'DEC-21', 'Sprints-21', 'TD_ACWR', 'TD_MSWR', '>19.8_ACWR',
+# '>19.8_MSWR', '>25_ACWR', '>25_MSWR', 'ACC_ACWR', 'ACC_MSWR',
+# 'DEC_ACWR', 'DEC_MSWR']
+
+metrics_test = ['TD-1', '>19.8-1', '>25-1', 'ACC-1', 'DEC-1', 'Sprints-1',
+       'Mins-1', '% Max Speed-1', 'TD-3', '>19.8-3', '>25-3', 'ACC-3',
+       'DEC-3', 'Sprints-3', 'TD-7', '>19.8-7', '>25-7', 'ACC-7',
+       'DEC-7', 'Sprints-7', 'TD-21', '>19.8-21', '>25-21', 'ACC-21',
+       'DEC-21', 'Sprints-21', 'TD_ACWR', 'TD_MSWR', '>19.8_ACWR',
+       '>19.8_MSWR', '>25_ACWR', '>25_MSWR', 'ACC_ACWR', 'ACC_MSWR',
+       'DEC_ACWR', 'DEC_MSWR','Session_M+1', 'Session_M+2', 'Session_M+3',
+       'Session_M-1', 'Session_M-2', 'Session_M-3', 'Session_M-4',
+       'Session_M-5', 'Session_MD']
 
 
 if __name__ == "__main__":
@@ -363,21 +398,38 @@ if __name__ == "__main__":
 
     complete_df = calculate_fatigue_metrics(filtered_df, cols_calculate_fatigues)
 
+    data_df.MD.unique()
+
     test_df = process_data_testing(complete_df)
 
-    # Load the classifier
-    model = joblib.load("xgb_classifier_model_ns.pkl")
-
+    test_df
+    
     test_df_original = test_df.copy()
 
+    #ANN
+
+    # ann_model = joblib.load("xgb_classifier_model_ns.pkl") 
+    # scaler = StandardScaler()
+
+    # # Scale only the selected columns
+    # X_test_scaled = scaler.fit_transform(test_df[metrics_test])
+
+    # predictions = ann_model.predict(X_test_scaled) * 100
+    # print(predictions)
+
+    # XGB 
+
+    # Load the classifier
+    model = joblib.load("xgb_classifier_model_s1.pkl")
+    
     predictions = model.predict_proba(test_df[metrics_test])[:, 1] * 100
     print(predictions)
 
     # Select PlayerID and Injury columns from the test_df_original
-    result_df = test_df_original[['PlayerID', 'Injury']].copy()
+    aresult_df = test_df_original[['PlayerID', 'Injury']].copy()
 
     # Add the Probability column using the predictions
-    result_df['Probability'] = predictions
+    aresult_df['Probability'] = predictions
 
     
 
