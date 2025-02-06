@@ -23,6 +23,8 @@ selected_cols = [
     "Total Distance",
     "Distance Zone 5 (Absolute)",
     "Distance Zone 6 (Absolute)",
+    "Distance Zone 5 (Relative)",
+    "Distance Zone 6 (Relative)",
     "Sprints",
     "% Max Speed",
     "ACC B1-3",
@@ -38,6 +40,8 @@ rename_map = {
     "Total Distance": "TD",
     "Distance Zone 5 (Absolute)": ">19.8",
     "Distance Zone 6 (Absolute)": ">25",
+    "Distance Zone 5 (Relative)": ">19.8_Rel-1",
+    "Distance Zone 6 (Relative)": ">25_Rel-1",
     "Sprints": "Sprints",
     "% Max Speed": "% Max Speed",
     "ACC B1-3": "ACC",
@@ -49,6 +53,8 @@ cols_float = [
     "Total Distance",
     "Distance Zone 5 (Absolute)",
     "Distance Zone 6 (Absolute)",
+    "Distance Zone 5 (Relative)",
+    "Distance Zone 6 (Relative)",
     "Sprints",
     "% Max Speed",
     "ACC B1-3",
@@ -85,6 +91,7 @@ columns_to_drop = [
     "Sprints-21-avg",
     "Sprints-21-std",
 ]
+
 
 def read_files():
     try:
@@ -153,6 +160,7 @@ def process_duplicates(df):
 
     return final_df
 
+
 def clean_session_value(session):
     # Check for the pattern +X/-X and extract the -X part
     match = re.search(r"(-\d+)", session)
@@ -164,11 +172,10 @@ def clean_session_value(session):
 def data_processing(df):
     df = df[selected_cols]
 
-    df.loc[: , cols_float] = df.loc[:, cols_float].astype(float)
+    df.loc[:, cols_float] = df.loc[:, cols_float].astype(float)
     df = df.rename(columns=rename_map)
 
-
-    df.loc[:,"Date"] = pd.to_datetime(df.loc[:,"Date"], dayfirst=True)
+    df.loc[:, "Date"] = pd.to_datetime(df.loc[:, "Date"], dayfirst=True)
 
     # Select latest day and last days
     # df = df.groupby("PlayerID", group_keys=False).apply(
@@ -178,13 +185,12 @@ def data_processing(df):
     # )
 
     # Target date and past 20 days
-    target_date = pd.Timestamp('2025-01-20')
     date_range_start = target_date - pd.Timedelta(days=20)
 
     df = df.groupby("PlayerID", group_keys=False).apply(
-    lambda group: group[
-        (group["Date"] >= date_range_start) & (group["Date"] <= target_date)
-    ]
+        lambda group: group[
+            (group["Date"] >= date_range_start) & (group["Date"] <= target_date)
+        ]
     )
 
     # Example usage on a DataFrame column
@@ -279,7 +285,6 @@ def filter_players(df):
             # Print PlayerID and drop the row
             print(f"PlayerID {row['PlayerID']} does not have enough information.")
             df = df.drop(index)
-    
 
     df = df.reset_index(drop=True)
 
@@ -319,45 +324,74 @@ def session_OHE(df):
     # encoded_df = final_df.dropna(subset=one_hot_columns)
     return encoded_df
 
+
 import pandas as pd
 
+
 def one_hot_encode_session(df, column_name, session_values):
-    
     # Create column names for the one-hot encoding
-    column_names = [f"Session_{'M' + s[2:] if '+' in s or '-' in s else s}" for s in session_values]
-    
+    column_names = [
+        f"Session_{'M' + s[2:] if '+' in s or '-' in s else s}" for s in session_values
+    ]
+
     # Initialize a zero-initialized DataFrame for one-hot encoding with the same index as the input DataFrame
     one_hot_df = pd.DataFrame(0, index=df.index, columns=column_names)
 
     # Correct mapping of session values to columns
     for idx in df.index:
         session = df.loc[idx, column_name]
-        if session == 'MD':
-            one_hot_df.loc[idx, 'Session_MD'] = 1
+        if session == "MD":
+            one_hot_df.loc[idx, "Session_MD"] = 1
         else:
-            one_hot_df.loc[idx, f"Session_M{session[2:]}"] = 1  # Handles both + and - cases
-    
+            one_hot_df.loc[idx, f"Session_M{session[2:]}"] = (
+                1  # Handles both + and - cases
+            )
+
     # Concatenate the original DataFrame with the one-hot encoding DataFrame
     return pd.concat([df, one_hot_df], axis=1)
+
 
 def process_data_testing(df):
     latest_date = df["Date"].max()
     latest_date_rows = df[df["Date"] == latest_date]
 
-    columns_to_rename = ["TD", ">19.8", ">25", "ACC", "DEC", "Sprints", "Mins", "% Max Speed"]
+    columns_to_rename = [
+        "TD",
+        ">19.8",
+        ">25",
+        "ACC",
+        "DEC",
+        "Sprints",
+        "Mins",
+        "% Max Speed",
+    ]
 
     # Rename columns by adding -1
     latest_date_rows.rename(
         columns={col: f"{col}-1" for col in columns_to_rename}, inplace=True
     )
 
-    target_sessions = ['MD', 'MD+1', 'MD+2', 'MD+3', 'MD-5', 'MD-4', 'MD-3', 'MD-2', 'MD-1']
+    target_sessions = [
+        "MD",
+        "MD+1",
+        "MD+2",
+        "MD+3",
+        "MD-5",
+        "MD-4",
+        "MD-3",
+        "MD-2",
+        "MD-1",
+    ]
 
     # Filter DataFrame
-    latest_date_rows_filtered = latest_date_rows[latest_date_rows['Session'].isin(target_sessions)]
-    
-    latest_date_rows_filtered_OHE = one_hot_encode_session(latest_date_rows_filtered, 'Session', target_sessions)
-    
+    latest_date_rows_filtered = latest_date_rows[
+        latest_date_rows["Session"].isin(target_sessions)
+    ]
+
+    latest_date_rows_filtered_OHE = one_hot_encode_session(
+        latest_date_rows_filtered, "Session", target_sessions
+    )
+
     latest_date_rows_filtered_OHE = latest_date_rows_filtered_OHE.reset_index(drop=True)
 
     return latest_date_rows_filtered_OHE
@@ -370,16 +404,68 @@ def process_data_testing(df):
 # '>19.8_MSWR', '>25_ACWR', '>25_MSWR', 'ACC_ACWR', 'ACC_MSWR',
 # 'DEC_ACWR', 'DEC_MSWR']
 
-metrics_test = ['TD-1', '>19.8-1', '>25-1', 'ACC-1', 'DEC-1', 'Sprints-1',
-       'Mins-1', '% Max Speed-1', 'TD-3', '>19.8-3', '>25-3', 'ACC-3',
-       'DEC-3', 'Sprints-3', 'TD-7', '>19.8-7', '>25-7', 'ACC-7',
-       'DEC-7', 'Sprints-7', 'TD-21', '>19.8-21', '>25-21', 'ACC-21',
-       'DEC-21', 'Sprints-21', 'TD_ACWR', 'TD_MSWR', '>19.8_ACWR',
-       '>19.8_MSWR', '>25_ACWR', '>25_MSWR', 'ACC_ACWR', 'ACC_MSWR',
-       'DEC_ACWR', 'DEC_MSWR','Session_M+1', 'Session_M+2', 'Session_M+3',
-       'Session_M-1', 'Session_M-2', 'Session_M-3', 'Session_M-4',
-       'Session_M-5', 'Session_MD']
+# metrics_test = ['TD-1', '>19.8-1', '>25-1', 'ACC-1', 'DEC-1', 'Sprints-1',
+#        'Mins-1', '% Max Speed-1', 'TD-3', '>19.8-3', '>25-3', 'ACC-3',
+#        'DEC-3', 'Sprints-3', 'TD-7', '>19.8-7', '>25-7', 'ACC-7',
+#        'DEC-7', 'Sprints-7', 'TD-21', '>19.8-21', '>25-21', 'ACC-21',
+#        'DEC-21', 'Sprints-21', 'TD_ACWR', 'TD_MSWR', '>19.8_ACWR',
+#        '>19.8_MSWR', '>25_ACWR', '>25_MSWR', 'ACC_ACWR', 'ACC_MSWR',
+#        'DEC_ACWR', 'DEC_MSWR','Session_M+1', 'Session_M+2', 'Session_M+3',
+#        'Session_M-1', 'Session_M-2', 'Session_M-3', 'Session_M-4',
+#        'Session_M-5', 'Session_MD']
 
+# metrics_test = ['TD-1', '>19.8-1', '>25-1', 'ACC-1', 'DEC-1', 'Sprints-1',
+#        'Mins-1', '>19.8_Rel-1', '>25_Rel-1', '% Max Speed-1', 'TD-3', '>19.8-3', '>25-3', 'ACC-3',
+#        'DEC-3', 'Sprints-3', 'TD-7', '>19.8-7', '>25-7', 'ACC-7',
+#        'DEC-7', 'Sprints-7', 'TD-21', '>19.8-21', '>25-21', 'ACC-21',
+#        'DEC-21', 'Sprints-21', 'TD_ACWR', 'TD_MSWR', '>19.8_ACWR',
+#        '>19.8_MSWR', '>25_ACWR', '>25_MSWR', 'ACC_ACWR', 'ACC_MSWR',
+#        'DEC_ACWR', 'DEC_MSWR','Session_M+1', 'Session_M+2', 'Session_M+3',
+#        'Session_M-1', 'Session_M-2', 'Session_M-3', 'Session_M-4',
+#        'Session_M-5', 'Session_MD']
+
+metrics_test = [
+    "TD-1",
+    ">19.8-1",
+    ">25-1",
+    "ACC-1",
+    "DEC-1",
+    "Sprints-1",
+    "Mins-1",
+    ">19.8_Rel-1",
+    ">25_Rel-1",
+    "% Max Speed-1",
+    "TD-3",
+    ">19.8-3",
+    ">25-3",
+    "ACC-3",
+    "DEC-3",
+    "Sprints-3",
+    "TD-7",
+    ">19.8-7",
+    ">25-7",
+    "ACC-7",
+    "DEC-7",
+    "Sprints-7",
+    "TD-21",
+    ">19.8-21",
+    ">25-21",
+    "ACC-21",
+    "DEC-21",
+    "Sprints-21",
+    "TD_ACWR",
+    "TD_MSWR",
+    ">19.8_ACWR",
+    ">19.8_MSWR",
+    ">25_ACWR",
+    ">25_MSWR",
+    "ACC_ACWR",
+    "ACC_MSWR",
+    "DEC_ACWR",
+    "DEC_MSWR",
+]
+
+target_date = pd.Timestamp("2025-1-20")
 
 if __name__ == "__main__":
     # Call the function to process files in the current directory
@@ -398,41 +484,35 @@ if __name__ == "__main__":
 
     complete_df = calculate_fatigue_metrics(filtered_df, cols_calculate_fatigues)
 
-    data_df.MD.unique()
-
     test_df = process_data_testing(complete_df)
 
-    test_df
-    
     test_df_original = test_df.copy()
 
-    #ANN
+    # ------ ANN
 
-    # ann_model = joblib.load("xgb_classifier_model_ns.pkl") 
-    # scaler = StandardScaler()
+    ann_model = joblib.load("ann_model_ns.pkl")
+    scaler = StandardScaler()
 
-    # # Scale only the selected columns
-    # X_test_scaled = scaler.fit_transform(test_df[metrics_test])
+    # Scale only the selected columns
+    X_test_scaled = scaler.fit_transform(test_df[metrics_test])
 
-    # predictions = ann_model.predict(X_test_scaled) * 100
+    predictions = ann_model.predict(X_test_scaled) * 100
     # print(predictions)
 
-    # XGB 
+    # ------ XGB
 
     # Load the classifier
-    model = joblib.load("xgb_classifier_model_s1.pkl")
-    
-    predictions = model.predict_proba(test_df[metrics_test])[:, 1] * 100
-    print(predictions)
+    # model = joblib.load("xgb_classifier_model_s1.pkl")
+
+    # predictions = model.predict_proba(test_df[metrics_test])[:, 1] * 100
+    # print(predictions)
+
+    # ------
 
     # Select PlayerID and Injury columns from the test_df_original
-    aresult_df = test_df_original[['PlayerID', 'Injury']].copy()
+    aresult_df = test_df_original[["PlayerID", "Injury"]].copy()
 
     # Add the Probability column using the predictions
-    aresult_df['Probability'] = predictions
+    aresult_df["Probability"] = predictions
 
-    
-
-
-
-    
+    print(aresult_df)
