@@ -4,6 +4,9 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 import re
+from openpyxl.styles import PatternFill
+from openpyxl import Workbook
+from datetime import datetime
 
 """
 Steps to take:
@@ -325,9 +328,6 @@ def session_OHE(df):
     return encoded_df
 
 
-import pandas as pd
-
-
 def one_hot_encode_session(df, column_name, session_values):
     # Create column names for the one-hot encoding
     column_names = [
@@ -465,7 +465,40 @@ metrics_test = [
     "DEC_MSWR",
 ]
 
-target_date = pd.Timestamp("2025-1-20")
+def export_excel(df):
+    # Get current date
+    current_date = datetime.now().strftime("%d-%m-%Y")
+    # Create file name with current date
+    filename = f"results_{current_date}.xlsx"
+    # Get the current working directory and form full path
+    current_directory = os.getcwd()
+
+    file_path = os.path.join(current_directory, filename)
+
+    # Create a Pandas Excel writer using Openpyxl as the engine
+    with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Sheet1')
+        worksheet = writer.sheets['Sheet1']
+
+        # Iterate over all cells in "Probability" columns
+        for col in df.columns:
+            if "Probability" in col:
+                for row, value in enumerate(df[col], start=2):  # start=2 to account for header row
+                    cell = worksheet.cell(row=row, column=df.columns.get_loc(col) + 1)
+
+                    # Determine color based on value
+                    if value > 50:
+                        fill = PatternFill(start_color="FF0000", end_color="FF0000", fill_type="solid")  # Red
+                    elif 35 <= value <= 50:
+                        fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")  # Yellow
+                    else:
+                        fill = PatternFill(start_color="00FF00", end_color="00FF00", fill_type="solid")  # Green
+
+                    cell.fill = fill
+
+    return file_path
+
+target_date = pd.Timestamp("2025-1-15")
 
 if __name__ == "__main__":
     # Call the function to process files in the current directory
@@ -491,6 +524,7 @@ if __name__ == "__main__":
     # ------ ANN
 
     ann_model = joblib.load("ann_model_ns.pkl")
+
     scaler = StandardScaler()
 
     # Scale only the selected columns
@@ -510,9 +544,13 @@ if __name__ == "__main__":
     # ------
 
     # Select PlayerID and Injury columns from the test_df_original
-    aresult_df = test_df_original[["PlayerID", "Injury"]].copy()
+    aresult_df = test_df_original["PlayerID"].copy()
 
     # Add the Probability column using the predictions
     aresult_df["Probability"] = predictions
 
     print(aresult_df)
+
+    export_excel(aresult_df)
+
+    
