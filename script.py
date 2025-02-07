@@ -188,13 +188,13 @@ def data_processing(df):
     # )
 
     # Target date and past 20 days
-    date_range_start = target_date - pd.Timedelta(days=20)
+    # date_range_start = target_date - pd.Timedelta(days=20)
 
-    df = df.groupby("PlayerID", group_keys=False).apply(
-        lambda group: group[
-            (group["Date"] >= date_range_start) & (group["Date"] <= target_date)
-        ]
-    )
+    # df = df.groupby("PlayerID", group_keys=False).apply(
+    #     lambda group: group[
+    #         (group["Date"] >= date_range_start) & (group["Date"] <= target_date)
+    #     ]
+    # )
 
     # Example usage on a DataFrame column
     df["Session"] = df["Session"].apply(clean_session_value)
@@ -396,75 +396,6 @@ def process_data_testing(df):
 
     return latest_date_rows_filtered_OHE
 
-
-# metrics_test = ['TD-1', '>19.8-1', '>25-1', 'ACC-1', 'DEC-1', 'Sprints-1','Mins-1', '% Max Speed-1', 'TD-3', '>19.8-3', '>25-3', 'ACC-3',
-# 'DEC-3', 'Sprints-3', 'TD-7', '>19.8-7', '>25-7', 'ACC-7',
-# 'DEC-7', 'Sprints-7', 'TD-21', '>19.8-21', '>25-21', 'ACC-21',
-# 'DEC-21', 'Sprints-21', 'TD_ACWR', 'TD_MSWR', '>19.8_ACWR',
-# '>19.8_MSWR', '>25_ACWR', '>25_MSWR', 'ACC_ACWR', 'ACC_MSWR',
-# 'DEC_ACWR', 'DEC_MSWR']
-
-# metrics_test = ['TD-1', '>19.8-1', '>25-1', 'ACC-1', 'DEC-1', 'Sprints-1',
-#        'Mins-1', '% Max Speed-1', 'TD-3', '>19.8-3', '>25-3', 'ACC-3',
-#        'DEC-3', 'Sprints-3', 'TD-7', '>19.8-7', '>25-7', 'ACC-7',
-#        'DEC-7', 'Sprints-7', 'TD-21', '>19.8-21', '>25-21', 'ACC-21',
-#        'DEC-21', 'Sprints-21', 'TD_ACWR', 'TD_MSWR', '>19.8_ACWR',
-#        '>19.8_MSWR', '>25_ACWR', '>25_MSWR', 'ACC_ACWR', 'ACC_MSWR',
-#        'DEC_ACWR', 'DEC_MSWR','Session_M+1', 'Session_M+2', 'Session_M+3',
-#        'Session_M-1', 'Session_M-2', 'Session_M-3', 'Session_M-4',
-#        'Session_M-5', 'Session_MD']
-
-# metrics_test = ['TD-1', '>19.8-1', '>25-1', 'ACC-1', 'DEC-1', 'Sprints-1',
-#        'Mins-1', '>19.8_Rel-1', '>25_Rel-1', '% Max Speed-1', 'TD-3', '>19.8-3', '>25-3', 'ACC-3',
-#        'DEC-3', 'Sprints-3', 'TD-7', '>19.8-7', '>25-7', 'ACC-7',
-#        'DEC-7', 'Sprints-7', 'TD-21', '>19.8-21', '>25-21', 'ACC-21',
-#        'DEC-21', 'Sprints-21', 'TD_ACWR', 'TD_MSWR', '>19.8_ACWR',
-#        '>19.8_MSWR', '>25_ACWR', '>25_MSWR', 'ACC_ACWR', 'ACC_MSWR',
-#        'DEC_ACWR', 'DEC_MSWR','Session_M+1', 'Session_M+2', 'Session_M+3',
-#        'Session_M-1', 'Session_M-2', 'Session_M-3', 'Session_M-4',
-#        'Session_M-5', 'Session_MD']
-
-metrics_test = [
-    "TD-1",
-    ">19.8-1",
-    ">25-1",
-    "ACC-1",
-    "DEC-1",
-    "Sprints-1",
-    "Mins-1",
-    ">19.8_Rel-1",
-    ">25_Rel-1",
-    "% Max Speed-1",
-    "TD-3",
-    ">19.8-3",
-    ">25-3",
-    "ACC-3",
-    "DEC-3",
-    "Sprints-3",
-    "TD-7",
-    ">19.8-7",
-    ">25-7",
-    "ACC-7",
-    "DEC-7",
-    "Sprints-7",
-    "TD-21",
-    ">19.8-21",
-    ">25-21",
-    "ACC-21",
-    "DEC-21",
-    "Sprints-21",
-    "TD_ACWR",
-    "TD_MSWR",
-    ">19.8_ACWR",
-    ">19.8_MSWR",
-    ">25_ACWR",
-    ">25_MSWR",
-    "ACC_ACWR",
-    "ACC_MSWR",
-    "DEC_ACWR",
-    "DEC_MSWR",
-]
-
 def export_excel(df):
     # Get current date
     current_date = datetime.now().strftime("%d-%m-%Y")
@@ -498,6 +429,119 @@ def export_excel(df):
 
     return file_path
 
+def standarize_data_ann(df, metrics, session_types):
+        
+    scaler = StandardScaler()
+        
+    if session_types:
+            
+        no_scaled = ['Session_M+1', 'Session_M+2', 'Session_M+3',
+        'Session_M-1', 'Session_M-2', 'Session_M-3', 'Session_M-4',
+        'Session_M-5', 'Session_MD']
+            
+        # Columns to scale: exclude those in no_scaled
+        scaled_columns = [col for col in df.columns if col not in no_scaled]
+
+        # Scale only the selected columns
+        df_scaled_part = scaler.fit_transform(df[scaled_columns])
+
+        # Convert scaled parts back to DataFrame
+        df_scaled_part = pd.DataFrame(df_scaled_part, columns=scaled_columns, index=df.index)
+
+        # Add the unscaled columns back
+        df_scaled = pd.concat([df_scaled_part, df[no_scaled]], axis=1)
+
+        # Ensure column order matches the original
+        scaled_data = df_scaled[df.columns]
+            
+            
+    else:
+        # Scale only the selected columns
+        scaled_data = scaler.transform(df[metrics])
+            
+        
+    return scaled_data
+
+
+# metrics_test = ['TD-1', '>19.8-1', '>25-1', 'ACC-1', 'DEC-1', 'Sprints-1','Mins-1', '% Max Speed-1', 'TD-3', '>19.8-3', '>25-3', 'ACC-3',
+# 'DEC-3', 'Sprints-3', 'TD-7', '>19.8-7', '>25-7', 'ACC-7',
+# 'DEC-7', 'Sprints-7', 'TD-21', '>19.8-21', '>25-21', 'ACC-21',
+# 'DEC-21', 'Sprints-21', 'TD_ACWR', 'TD_MSWR', '>19.8_ACWR',
+# '>19.8_MSWR', '>25_ACWR', '>25_MSWR', 'ACC_ACWR', 'ACC_MSWR',
+# 'DEC_ACWR', 'DEC_MSWR']
+
+# metrics_test = ['TD-1', '>19.8-1', '>25-1', 'ACC-1', 'DEC-1', 'Sprints-1',
+#        'Mins-1', '% Max Speed-1', 'TD-3', '>19.8-3', '>25-3', 'ACC-3',
+#        'DEC-3', 'Sprints-3', 'TD-7', '>19.8-7', '>25-7', 'ACC-7',
+#        'DEC-7', 'Sprints-7', 'TD-21', '>19.8-21', '>25-21', 'ACC-21',
+#        'DEC-21', 'Sprints-21', 'TD_ACWR', 'TD_MSWR', '>19.8_ACWR',
+#        '>19.8_MSWR', '>25_ACWR', '>25_MSWR', 'ACC_ACWR', 'ACC_MSWR',
+#        'DEC_ACWR', 'DEC_MSWR','Session_M+1', 'Session_M+2', 'Session_M+3',
+#        'Session_M-1', 'Session_M-2', 'Session_M-3', 'Session_M-4',
+#        'Session_M-5', 'Session_MD']
+
+# metrics_test = ['TD-1', '>19.8-1', '>25-1', 'ACC-1', 'DEC-1', 'Sprints-1',
+#        'Mins-1', '>19.8_Rel-1', '>25_Rel-1', '% Max Speed-1', 'TD-3', '>19.8-3', '>25-3', 'ACC-3',
+#        'DEC-3', 'Sprints-3', 'TD-7', '>19.8-7', '>25-7', 'ACC-7',
+#        'DEC-7', 'Sprints-7', 'TD-21', '>19.8-21', '>25-21', 'ACC-21',
+#        'DEC-21', 'Sprints-21', 'TD_ACWR', 'TD_MSWR', '>19.8_ACWR',
+#        '>19.8_MSWR', '>25_ACWR', '>25_MSWR', 'ACC_ACWR', 'ACC_MSWR',
+#        'DEC_ACWR', 'DEC_MSWR','Session_M+1', 'Session_M+2', 'Session_M+3',
+#        'Session_M-1', 'Session_M-2', 'Session_M-3', 'Session_M-4',
+#        'Session_M-5', 'Session_MD']
+
+# metrics_test = [
+#     "TD-1",
+#     ">19.8-1",
+#     ">25-1",
+#     "ACC-1",
+#     "DEC-1",
+#     "Sprints-1",
+#     "Mins-1",
+#     ">19.8_Rel-1",
+#     ">25_Rel-1",
+#     "% Max Speed-1",
+#     "TD-3",
+#     ">19.8-3",
+#     ">25-3",
+#     "ACC-3",
+#     "DEC-3",
+#     "Sprints-3",
+#     "TD-7",
+#     ">19.8-7",
+#     ">25-7",
+#     "ACC-7",
+#     "DEC-7",
+#     "Sprints-7",
+#     "TD-21",
+#     ">19.8-21",
+#     ">25-21",
+#     "ACC-21",
+#     "DEC-21",
+#     "Sprints-21",
+#     "TD_ACWR",
+#     "TD_MSWR",
+#     ">19.8_ACWR",
+#     ">19.8_MSWR",
+#     ">25_ACWR",
+#     ">25_MSWR",
+#     "ACC_ACWR",
+#     "ACC_MSWR",
+#     "DEC_ACWR",
+#     "DEC_MSWR",
+# ]
+
+metrics_test = ['TD-1', '>19.8-1', '>25-1', 'ACC-1', 'DEC-1', 'Sprints-1',
+       'Mins-1', '>19.8_Rel-1', '>25_Rel-1', '% Max Speed-1', 'TD-3', '>19.8-3', '>25-3', 'ACC-3',
+       'DEC-3', 'Sprints-3', 'TD-7', '>19.8-7', '>25-7', 'ACC-7',
+       'DEC-7', 'Sprints-7', 'TD-21', '>19.8-21', '>25-21', 'ACC-21',
+       'DEC-21', 'Sprints-21', 'TD_ACWR', 'TD_MSWR', '>19.8_ACWR',
+       '>19.8_MSWR', '>25_ACWR', '>25_MSWR', 'ACC_ACWR', 'ACC_MSWR',
+       'DEC_ACWR', 'DEC_MSWR','Session_M+1', 'Session_M+2', 'Session_M+3',
+       'Session_M-1', 'Session_M-2', 'Session_M-3', 'Session_M-4',
+       'Session_M-5', 'Session_MD']
+
+
 target_date = pd.Timestamp("2025-1-15")
 
 if __name__ == "__main__":
@@ -509,6 +553,8 @@ if __name__ == "__main__":
         exit()
 
     processed_df = data_processing(data_df)
+    
+    processed_df.to_excel("processed_newdata.xlsx", index=False)
 
     cumulative_df = calcular_acumulado(processed_df, cols_calculate_loads, [3, 7, 21])
 
@@ -519,17 +565,17 @@ if __name__ == "__main__":
 
     test_df = process_data_testing(complete_df)
 
+    test_df = test_df[metrics_test]
+    
     test_df_original = test_df.copy()
 
     # ------ ANN
 
     ann_model = joblib.load("ann_model_ns.pkl")
 
-    scaler = StandardScaler()
-
     # Scale only the selected columns
-    X_test_scaled = scaler.fit_transform(test_df[metrics_test])
-
+    X_test_scaled = standarize_data_ann(test_df, metrics_test, True)
+    
     predictions = ann_model.predict(X_test_scaled) * 100
     # print(predictions)
 
