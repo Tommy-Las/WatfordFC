@@ -542,7 +542,7 @@ metrics_test = ['TD-1', '>19.8-1', '>25-1', 'ACC-1', 'DEC-1', 'Sprints-1',
        'Session_M-5', 'Session_MD']
 
 
-target_date = pd.Timestamp("2025-1-15")
+target_date = pd.Timestamp("2025-1-20")
 
 if __name__ == "__main__":
     # Call the function to process files in the current directory
