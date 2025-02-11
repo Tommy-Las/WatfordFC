@@ -588,32 +588,15 @@ if __name__ == "__main__":
 
     test_df = test_df[metrics_test]
 
-    # ------ ANN
-
-    ann_model = joblib.load("ann_model_ns.pkl")
-
-    # Scale only the selected columns
-    X_test_scaled = standarize_data_ann(test_df, metrics_test, True)
-
-    predictions = ann_model.predict(X_test_scaled) * 100
-    # print(predictions)
-
-    # ------ XGB
-
     # Load the classifier
-    # model = joblib.load("xgb_classifier_model_s1.pkl")
+    model = joblib.load("xgb_model_ns_2.pkl")
 
-    # predictions = model.predict_proba(test_df[metrics_test])[:, 1] * 100
+    predictions = model.predict_proba(test_df[metrics_test])[:, 1] * 100
     # print(predictions)
-
-    # ------
-
-    # Select PlayerID and Injury columns from the test_df_original
-    aresult_df = test_df_original["PlayerID"].copy()
 
     # Add the Probability column using the predictions
-    aresult_df["Probability"] = predictions
+    test_df_original["Index"] = predictions
 
-    print(aresult_df)
+    # print(test_df_original)
 
-    export_excel(aresult_df)
+    export_excel(test_df_original[metrics_results])
